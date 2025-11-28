@@ -1,0 +1,14 @@
+version: "4.0"
+
+services:
+  ##### mysql #####
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: "meuprimeiroalo"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "523580605"
+      MYSQL_ROOT_PASSWORD: "523580605"
+    ports:
+      - "3306:3306"

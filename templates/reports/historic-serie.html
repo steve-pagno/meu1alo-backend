@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <style>
+        .new-line {
+            margin-top: 10px
+        }
+        .spacing {
+            display: flex;
+            justify-content: space-between;
+        }
+        .tr-pair {
+            background-color: #bfbfbf;
+        }
+        .tb-item {
+            border-bottom: none;
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+            text-align: left;
+            width: 100%;
+        }
+        td, th, .tb-item {
+            border: 1px solid black;
+            padding: 2px 10px;
+            min-width: 90px;
+        }
+    </style>
+</head>
+<body style="margin: 50px; font-family: arial, sans-serif; font-size: 16px">
+    <h3 style="display: flex; justify-content: center">
+        Relatório de exames - Série Histórica de Teste e Reteste
+    </h3>
+    <div style="margin-top: 40px;" class="spacing">
+        <span><b>Nome: </b>{{baby.name}}</span>
+        <span style="width: 124px;"><b>DN.: </b>{{baby.date}}</span>
+    </div>
+    <div class="new-line">
+        <b>Sexo: </b> (&emsp;) Feminino &emsp; (&emsp;) Masculino &emsp;&emsp;
+        <b>Idade: </b>_____ anos _____ meses
+    </div>
+    <div class="new-line spacing">
+        <span><b>Mãe: </b> {{mother.name}}</span>
+        <span style="width: 138px;"><b>Idade: </b> {{mother.age}}</span>
+    </div>
+    <div class="new-line">
+        <b>Pai: </b>__________________________________________________________ <b>Idade: </b> _________
+    </div>
+    <br/>
+    <div class="new-line" style="display: flex; justify-content: center">
+        <canvas id="canvas1" width="400" height="250" style="border:1px solid #000000;"></canvas>
+        <script>
+            const canvas = document.getElementById("canvas1");
+            const ctx = canvas.getContext("2d");
+
+            ctx.beginPath();
+            ctx.font = "14px Arial";
+            let sum = 0;
+            for (let i = 1; i <= 6; i++) {
+                ctx.fillText(i.toString(), 10, 200-sum);
+                sum += 35;
+            }
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.font = "14px Arial";
+            sum = 0;
+            for (let i = 0; i < 6; i++) {
+                ctx.moveTo(20, 20+sum);
+                ctx.lineTo(375, 20+sum);
+                sum += 35;
+            }
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.font = "14px Arial";
+            const dates = ["01.12.22", "02.12.22", "03.12.22", "04.12.22", "05.12.22", "06.12.22"];
+            sum = 0;
+            dates.forEach(date => {
+                ctx.fillText(date, 15+sum, 238);
+                sum += 66;
+            });
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.font = "14px Arial";
+            sum = 0;
+            for (let i = 0; i < 6; i++) {
+                ctx.moveTo(45+sum, 20);
+                ctx.lineTo(45+sum, 220);
+                sum += 66;
+            }
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.font = "14px Arial";
+            ctx.moveTo(20, 210);
+            ctx.lineTo(375, 20);
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+        </script>
+    </div>
+    <div class="new-line">
+        <table>
+            <div class="tb-item tr-pair">
+                <b>Legenda da série histórica</b>
+            </div>
+            <tr class="tr-pair">
+                <th>Código</th><th>Procedimento</th>
+            </tr>
+            <tr>
+                <td><b>1</b></td><td>Teste</td>
+            </tr>
+            <tr class="tr-pair">
+                <td><b>2</b></td><td>Reteste</td>
+            </tr>
+            <tr>
+                <td><b>3</b></td><td>Encaminhado para diagnóstico</td>
+            </tr>
+            <tr class="tr-pair">
+                <td><b>4</b></td><td>1° atendimento em Serviço de referência</td>
+            </tr>
+            <tr>
+                <td><b>5</b></td><td>Diagnóstico final</td>
+            </tr>
+            <tr class="tr-pair">
+                <td><b>6</b></td><td>Início da intervenção (AASI)</td>
+            </tr>
+        </table>
+    </div>
+    <br/>
+    <div class="new-line" style="text-align: justify">
+        <p>
+            Orientações do Test:
+        </p>
+        <p>
+            {{test.orientation.description}}
+            _____________________________________________________________________________
+            _____________________________________________________________________________
+        </p>
+    </div>
+    <div class="new-line" style="text-align: justify">
+        <p>
+            Orientações do Retest:
+        </p>
+        <p>
+            {{retest.orientation.description}}
+            _____________________________________________________________________________
+            _____________________________________________________________________________
+        </p>
+    </div>
+</body>
+</html>

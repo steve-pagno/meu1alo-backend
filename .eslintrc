@@ -1,0 +1,165 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "unused-imports"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:sort/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/array-type": "error",
+    "@typescript-eslint/ban-types": [
+      "error",
+      {
+        "types": {
+          "Object": {
+            "message": "Avoid using the `Object` type. Did you mean `object`?",
+            "fixWith": "object"
+          },
+          "Function": {
+            "message": "Avoid using the `Function` type. Prefer a specific function type, like `() => void`, or use `ts.AnyFunction`.",
+            "fixWith": "() => {}"
+          },
+          "Boolean": {
+            "message": "Avoid using the `Boolean` type. Did you mean `boolean`?",
+            "fixWith": "boolean"
+          },
+          "Number": {
+            "message": "Avoid using the `Number` type. Did you mean `number`?",
+            "fixWith": "number"
+          },
+          "String": {
+            "message": "Avoid using the `String` type. Did you mean `string`?",
+            "fixWith": "string"
+          }
+        },
+        "extendDefaults": true
+      }
+    ],
+    "@typescript-eslint/no-empty-interface": "error",
+    "@typescript-eslint/no-var-requires": "error",
+    "@typescript-eslint/no-inferrable-types": "error",
+    "@typescript-eslint/no-this-alias": [
+      "error",
+      {
+        "allowDestructuring": true
+      }
+    ],
+    "@typescript-eslint/typedef": [
+      "error",
+      {
+        "parameter": true,
+        "propertyDeclaration": true
+      }
+    ],
+    "@typescript-eslint/type-annotation-spacing": ["warn", {
+      "before": false,
+      "after": true
+    }],
+    "sort/imports": [
+      "warn",
+      {
+        "groups": [
+          { "regex": "(A|a)bstract", "order": 1 },
+          { "type": "dependency", "order": 2 },
+          { "type": "other", "order": 3 }
+        ]
+      }
+    ],
+    "unused-imports/no-unused-imports": "warn",
+    "no-unused-vars": "off",
+    "arrow-return-shorthand": "off",
+    "forin": "off",
+    "member-access": "off",
+    "no-require-imports": "off",
+    "no-console": "off",
+    "no-debugger": "error",
+    "no-var": "error",
+    "no-object-literal-type-assertion": "off",
+    "no-shadowed-variable": "off",
+    "no-submodule-imports": "off",
+    "sort-imports": "off",
+    "import-name": "off",
+    "match-default-export-name": "off",
+    "prefer-conditional-expression": "off",
+    "ban-comma-operator": "off",
+    "restrict-plus-operands": "off",
+    "no-increment-decrement": "off",
+    "member-ordering": "off",
+    "no-angle-bracket-type-assertion": "off",
+    "no-bitwise": "off",
+    "no-namespace": "off",
+    "object-literal-sort-keys": "off",
+    "jsx-no-lambda": "off",
+    "semi": "error",
+    "no-constant-condition": "error",
+    "no-null-keyword": "off",
+    "object-shorthand-properties-first": "off",
+    "quotes": ["error", "single"],
+    "prefer-template": "off",
+    "no-eval": "error",
+    "prefer-object-spread": "error",
+    "prefer-const": [
+      "error",
+      {
+        "destructuring": "all"
+      }
+    ],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never"
+      }
+    ],
+    "no-parameter-reassignment": "off",
+    "arrow-parens": "off",
+    "no-duplicate-imports": "error",
+    "no-trailing-spaces": "error",
+    "curly": "error",
+    "max-len": [
+      "error",
+      190
+    ],
+    "brace-style": [
+      "error",
+      "1tbs",
+      {
+        "allowSingleLine": true
+      }
+    ],
+    "no-else-return": "error",
+    "indent": [
+      "error",
+      4,
+      {
+        "MemberExpression": 1,
+        "ignoredNodes": [
+          "FunctionExpression > .params[decorators.length > 0]",
+          "FunctionExpression > .params > :matches(Decorator, :not(:first-child))",
+          "ClassBody.body > PropertyDefinition[decorators.length > 0] > .key"
+        ]
+      }
+    ],
+    "space-in-parens": [
+      "error",
+      "never"
+    ],
+    "array-bracket-spacing": [
+      "error",
+      "never"
+    ],
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "block-spacing": "error",
+    "no-return-await": "error",
+    "no-case-declarations": "error",
+    "prefer-switch": "off",
+    "no-unsafe-any": "off",
+    "radix": "error"
+  }
+}

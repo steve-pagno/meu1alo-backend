@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <style>
+        .new-line {
+            margin-top: 10px;
+        }
+        .spacing {
+            display: flex;
+            justify-content: space-between;
+        }
+        .tr-pair {
+            background-color: #bfbfbf;
+        }
+        .tb-item {
+            border-bottom: none;
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+            text-align: left;
+            width: 100%;
+        }
+        td, th, .tb-item {
+            border: 1px solid black;
+            padding: 2px 10px;
+            min-width: 90px;
+        }
+    </style>
+</head>
+<body style="margin: 50px; font-family: arial, sans-serif; font-size: 16px">
+<h3 style="display: flex; justify-content: center">
+    Relatório de reteste
+</h3>
+<div style="margin-top: 40px;" class="spacing">
+    <span><b>Nome: </b>{{baby.name}}</span>
+    <span style="width: 124px;"><b>DN.: </b>{{baby.date}}</span>
+</div>
+<div class="new-line">
+    <b>Sexo: </b> (&emsp;) Feminino &emsp; (&emsp;) Masculino &emsp;&emsp;
+    <b>Idade: </b>_____ anos _____ meses
+</div>
+<div class="new-line spacing">
+    <span><b>Mãe: </b> {{mother.name}}</span>
+    <span style="width: 138px;"><b>Idade: </b> {{mother.age}}</span>
+</div>
+<div class="new-line">
+    <b>Pai: </b>__________________________________________________________ <b>Idade: </b> _________
+</div>
+<div class="new-line">
+    <b>Data do Exame: </b> {{triage.date}}</span>
+</div>
+<div class="new-line spacing">
+    <span><b>Equipamento: </b> {{equipment.name}}</span>
+    <span style="width: 289px"><b>Data da última calibração: </b> {{equipment.calibration}}</span>
+</div>
+<div class="new-line">
+            <span>
+                <b>Tipo de TAN: </b>
+                {{#if tan.transientEOE}}
+                    ( X )
+                {{else}}
+                    (&emsp;)
+                {{/if}}
+                EOE transiente &emsp;
+                {{#if tan.distortionEOE}}
+                    ( X )
+                {{else}}
+                    (&emsp;)
+                {{/if}}
+                EOE produto de distorção &emsp;
+                {{#if tan.autoPEATE}}
+                    ( X )
+                {{else}}
+                    (&emsp;)
+                {{/if}}
+                PEATE automático
+            </span>
+</div>
+<br/>
+<div class="new-line" style="text-align: justify">
+    <p>
+        {{conduct.resultDescription}}
+        _____________________________________________________________________________
+        _____________________________________________________________________________
+    </p>
+    <p>
+        {{conduct.accompanyDescription}}.
+        _____________________________________________________________________________
+        _____________________________________________________________________________
+    </p>
+    <p>
+        {{orientation.description}}
+        _____________________________________________________________________________
+        _____________________________________________________________________________
+    </p>
+</div>
+</body>
+</html>
