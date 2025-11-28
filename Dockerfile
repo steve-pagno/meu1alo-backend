@@ -9,21 +9,15 @@ ENV SERVER_PORT=$SERVER_PORT
 COPY package*.json /usr/src/app/
 COPY src /usr/src/app/src
 COPY tsconfig.json /usr/src/app/tsconfig.json
-
-# --- INÍCIO DAS CORREÇÕES ---
-
-# 1. Copia o arquivo .env.development. 
-#    Ele DEVE existir no seu repositório local.
-COPY .env.development /usr/src/app/.env.development 
-
-# 2. Copia o arquivo .env.production (CRIE UM ARQUIVO VAZIO se não existir no seu repositório local).
-#    O script de build (EnvConfig) procura por ele, e se não existir, a cópia falha.
-COPY .env.production /usr/src/app/.env.production
-
-# 3. Copia a pasta 'templates' (necessária para o Build.copyTemplates())
+# Copia a pasta 'templates' (necessário para a função copyTemplates())
 COPY templates /usr/src/app/templates
 
-# --- FIM DAS CORREÇÕES ---
+# CORREÇÃO CRÍTICA:
+# 1. Cria arquivos de ambiente vazios para satisfazer a lógica de cópia do Build.ts
+#    Isso evita o erro "not found" (ENOENT) que você está vendo.
+RUN touch .env
+RUN touch .env.development
+RUN touch .env.production
 
 RUN npm install
 RUN npm run build
