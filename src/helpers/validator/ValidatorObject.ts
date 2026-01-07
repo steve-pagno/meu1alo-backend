@@ -46,4 +46,5 @@ export class ValidatorObject extends Validator<object>{
             } as unknown as SchemaType
         ];
     }
+    
 }

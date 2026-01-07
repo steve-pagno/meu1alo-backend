@@ -33,22 +33,24 @@ export default class UserRoutes extends AbstractRoutes {
 
     private recoverPassword(): void {
         const config: RouteConfig = {
-            description: 'Endpoint para solicitar recuperação de senha',
+            description: 'Recuperar Senha',
             method: 'post',
             path: '/recover-password',
             withAuthHeader: false,
             withJWT: false,
             params: new ValidatorRequest(
-                undefined, 
                 new ValidatorObject('body', [
                     new ValidatorString('email').required(true),
                     new ValidatorString('userType').required(true)
                 ]).required(true),
+                
+                undefined, 
+
                 undefined
             )
         };
 
-        this.addRoute<{ email: string, userType: string }>(
+        this.addRoute<{email: string, userType: string}>(
             config, 
             this.userController.recoverPassword.bind(this.userController)
         );

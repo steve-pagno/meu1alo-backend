@@ -4,6 +4,7 @@ import { Therapist } from '../../entity/therapist/Therapist';
 import CryptoHelper from '../../helpers/CryptoHelper';
 import TherapistService from './TherapistService';
 import { TherapistXP, TherapistXPString } from './TherapistTypes';
+import { EmailService } from '../../services/EmailService';
 
 export default class TherapistController {
     public async create(therapist: Therapist) {
@@ -16,6 +17,15 @@ export default class TherapistController {
 
         therapist.password = CryptoHelper.encrypt(therapist.password);
         const result = await therapistService.create(therapist, therapist.emails, therapist.phones);
+
+        try {
+            if (therapist.emails && therapist.emails.length > 0) {
+                const mainEmail = therapist.emails[0].email;
+                EmailService.sendWelcomeEmail(mainEmail, therapist.name);
+            }
+        } catch (error) {
+            console.error("Erro ao tentar enviar boas-vindas (não crítico):", error);
+        }
 
         return { httpStatus: HttpStatus.OK, result };
     }
