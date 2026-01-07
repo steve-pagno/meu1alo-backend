@@ -6,8 +6,8 @@ export class EmailService {
         host: "smtp.mailersend.net",
         port: 2525, // ou 587/8025
         auth: {
-            user: process.env.SMTP_USER || "MS_XppYOM@meuprimeiroalo.com.br",
-            pass: process.env.SMTP_PASS || "mssp.94xxlkn.jpzkmgqev71g059v.db2FAZl"
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
         }
     });
 
