@@ -13,6 +13,7 @@ export default class UserRoutes extends AbstractRoutes {
         this.userController = new UserController();
 
         this.login();
+        this.recoverPassword();
     }
 
     private login(): void {
@@ -28,5 +29,28 @@ export default class UserRoutes extends AbstractRoutes {
             withJWT: false
         };
         this.addRoute<{userType: string}>(config, this.userController.login);
+    }
+
+    private recoverPassword(): void {
+        const config: RouteConfig = {
+            description: 'Endpoint para solicitar recuperação de senha',
+            method: 'post',
+            path: '/recover-password',
+            withAuthHeader: false,
+            withJWT: false,
+            params: new ValidatorRequest(
+                undefined, 
+                new ValidatorObject('body', [
+                    new ValidatorString('email').required(true),
+                    new ValidatorString('userType').required(true)
+                ]).required(true),
+                undefined
+            )
+        };
+
+        this.addRoute<{ email: string, userType: string }>(
+            config, 
+            this.userController.recoverPassword.bind(this.userController)
+        );
     }
 }
