@@ -6,7 +6,7 @@ import InstitutionService from './InstitutionService';
 import dataSource from '../../config/DataSource'
 
 export default class InstitutionController {
-    public async create(institutionUser: InstitutionUser) {
+    public async create(institutionUser: any) {
         const institutionService = new InstitutionService();
         const userService = new UserService();
 

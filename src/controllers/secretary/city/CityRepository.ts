@@ -5,11 +5,11 @@ export default class CityRepository {
         const query = City
             .createQueryBuilder('c')
             .select(['c.id AS id', 'c.name AS name'])
-        ;
-        if(state) {
+            ;
+        if (state) {
             query.leftJoin('c.state', 's')
                 .where('s.id = :state', { state })
-            ;
+                ;
         }
         return query.execute();
     }
@@ -25,17 +25,25 @@ export default class CityRepository {
     public async getCitiesByZoneId(id: number): Promise<City[] | undefined> {
         return City.createQueryBuilder('c')
             .select(['c.id AS id', 'c.name AS name'])
-            .where('c.zone = :zone',  { zone: id })
+            .where('c.zone = :zone', { zone: id })
             .getRawMany()
-        ;
+            ;
     }
 
     public async getCitiesWithoutZoneByStateId(id: number): Promise<City[] | undefined> {
         return City.createQueryBuilder('c')
             .select(['c.id AS id', 'c.name AS name'])
-            .where('c.state = :state',  { state: id })
+            .where('c.state = :state', { state: id })
             .andWhere('c.zone IS NULL')
             .getRawMany()
-        ;
+            ;
+    }
+
+    public async getByNameAndState(cityName: string, stateUf: string): Promise<City | null> {
+        return City.createQueryBuilder('c')
+            .leftJoin('c.state', 's')
+            .where('c.name = :cityName', { cityName })
+            .andWhere('s.uf = :stateUf', { stateUf })
+            .getOne();
     }
 }

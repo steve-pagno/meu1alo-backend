@@ -1,97 +1,96 @@
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
-import { Institution, } from '../../entity/institution/Institution';
+import { Institution } from '../../entity/institution/Institution';
 import { InstitutionEmail } from '../../entity/institution/InstitutionEmail';
 import { InstitutionPhone } from '../../entity/institution/InstitutionPhone';
 import { DuplicateInstitutionError, InstitutionTypeError, NotFoundInstitutionError, NotFoundOneInstitutionError } from './InstitutionErrors';
 import InstitutionRepository from './InstitutionRepository';
 import { InstitutionPayload, InstitutionString, InstitutionType } from './InstitutionTypes';
+import CityRepository from '../secretary/city/CityRepository';
+import { AddressComponent } from '../../entity/decorators/components/Address';
 
 export default class InstitutionService {
     private institutionRepository: InstitutionRepository;
+    private cityRepository: CityRepository;
 
     constructor() {
         this.institutionRepository = new InstitutionRepository();
+        this.cityRepository = new CityRepository();
     }
 
-    public async noSimilarOrError({ cnes, institutionName }: InstitutionPayload): Promise<void> {
-        const results = await this.institutionRepository.findIdsSimilar(institutionName, cnes, 1);
-        const institution2 = results[0];
-        if(institution2){
-            throw new DuplicateInstitutionError(institution2.id.toString());
+    private async processAddress(addressData: any, fullPayload?: any): Promise<AddressComponent> {
+        if (!addressData) return addressData;
+
+        // Tenta pegar city_name e state_uf do addressData ou do payload principal
+        const cityName = addressData.city_name || fullPayload?.city_name;
+        const stateUf = addressData.state_uf || fullPayload?.state_uf;
+
+        if (!cityName || !stateUf) {
+            throw new Error(`Dados de localização incompletos: cidade ou UF não informados.`);
         }
+
+        const cityEntity = await this.cityRepository.getByNameAndState(cityName, stateUf);
+
+        if (!cityEntity) {
+            throw new Error(`Município '${cityName} - ${stateUf}' não encontrado no banco de dados.`);
+        }
+
+        const address = new AddressComponent();
+        address.street = addressData.street || addressData.rua;
+        address.number = addressData.number || addressData.numero;
+        address.adjunct = addressData.adjunct || addressData.complemento;
+        address.cep = (addressData.cep || "").replace(/\D/g, ''); 
+        address.city = cityEntity; 
+
+        return address;
     }
 
-    public async findOneById(id: number | string): Promise<Institution | undefined> {
-        const institution = await this.institutionRepository.findOne({ id: id as number });
-
-        if(!institution) {
+    public async create(payload: any, transaction?: EntityManager): Promise<Institution | { id: number }> {
+        if(!payload){
             throw new NotFoundOneInstitutionError();
         }
 
-        return institution;
-    }
-
-    public async findAll(): Promise<Institution[]> {
-        const institutions = await this.institutionRepository.findAll();
-
-        if(!institutions || institutions.length <= 0) {
-            throw new NotFoundInstitutionError();
+        if(payload.id) {
+            return { id: payload.id };
         }
 
-        return institutions;
-    }
+        const institution = new Institution();
+        institution.institutionName = payload.institutionName;
+        institution.cnes = payload.cnes;
+        institution.cnpj = payload.cnpj ? payload.cnpj.replace(/\D/g, '') : '';
+        
+        institution.institutionType = await this.getInstitutionType(payload.institutionType as InstitutionString);
 
-    public async getInstitutionType(institutionType: InstitutionString): Promise<InstitutionType> {
-        try {
-            return InstitutionType[institutionType];
-        }catch (e: any){
-            throw new InstitutionTypeError(e.message);
+        if (payload.address) {
+            // Passamos o payload completo também como fallback
+            institution.address = await this.processAddress(payload.address, payload);
         }
+
+        await this.noSimilarOrError(payload);
+
+        return this.institutionRepository.save(institution, transaction);
     }
 
-    public async getDashboard(): Promise<{ type: string }[]> {
-        return [
-            { type: 'baby-pass-fail' },
-            // { type: 'baby-come-born' },
-            { type: 'indicators-percent' },
-            { type: 'indicators' }
-        ];
+    // Métodos obrigatórios para o Controller funcionar
+    public async getDashboard() {
+        return [{ type: 'baby-pass-fail' }, { type: 'indicators-percent' }, { type: 'indicators' }];
     }
 
     public async getInstitutionTypes() {
-        return Object.keys(InstitutionType).map((key) => (
-            { id: key, name: InstitutionType[key as InstitutionString] }
-        ));
+        return Object.keys(InstitutionType).map((key) => ({ id: key, name: InstitutionType[key as keyof typeof InstitutionType] }));
     }
 
-    public async create(institution: InstitutionPayload, transaction?: EntityManager): Promise<Institution | { id: number }> {
-        if(!institution){
-            throw new NotFoundOneInstitutionError();
-        }
-
-        if(institution.id) {
-            return { id: institution.id };
-        }
-
-        institution.institutionType = await this.getInstitutionType(institution.institutionType as InstitutionString);
-
-        if(institution.cnpj && institution.cnpj.length > 14) {
-            institution.cnpj = institution.cnpj
-                .replaceAll('.', '')
-                .replaceAll('-', '')
-                .replaceAll('/', '');
-        }
-
-        await this.noSimilarOrError(institution);
-
-        return this.institutionRepository.save(institution as Institution, transaction);
+    public async noSimilarOrError({ cnes, institutionName }: any): Promise<void> {
+        const results = await this.institutionRepository.findIdsSimilar(institutionName, cnes, 1);
+        if(results[0]) throw new DuplicateInstitutionError(results[0].id.toString());
     }
 
-    public saveEmails(id: number, emails: string[], transaction?: EntityManager): Promise<InstitutionEmail[]>{
-        return this.institutionRepository.saveEmails(id, emails, transaction);
+    public async getInstitutionType(type: any): Promise<InstitutionType> {
+        try { return InstitutionType[type as InstitutionString]; } 
+        catch (e: any) { throw new InstitutionTypeError(e.message); }
     }
 
-    public savePhones(id: number, phones: string[], transaction?: EntityManager): Promise<InstitutionPhone[]>{
-        return this.institutionRepository.savePhones(id, phones, transaction);
-    }
+    public async findOneById(id: number) { return this.institutionRepository.findOne({ id }); }
+    public async findAll() { return this.institutionRepository.findAll(); }
+    public async saveEmails(id: number, emails: string[], t?: EntityManager) { return this.institutionRepository.saveEmails(id, emails, t); }
+    public async savePhones(id: number, phones: string[], t?: EntityManager) { return this.institutionRepository.savePhones(id, phones, t); }
 }
