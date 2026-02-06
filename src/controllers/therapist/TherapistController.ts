@@ -16,17 +16,25 @@ export default class TherapistController {
         await therapistService.isATherapistUser(therapist);
 
         therapist.password = CryptoHelper.encrypt(therapist.password);
-        const result = await therapistService.create(therapist, therapist.emails, therapist.phones);
+        const createdTherapist = await therapistService.create(therapist, therapist.emails, therapist.phones);
 
+        // 2. ADICIONADO: 'await' para esperar o envio e capturar erros
         try {
             if (therapist.emails && therapist.emails.length > 0) {
                 const mainEmail = therapist.emails[0].email;
-                EmailService.sendWelcomeEmail(mainEmail, therapist.name);
+                await EmailService.sendWelcomeEmail(mainEmail, therapist.name);
             }
         } catch (error) {
             console.error("Erro ao tentar enviar boas-vindas (não crítico):", error);
         }
 
+        // 3. Adiciona a mensagem de sucesso ao retorno
+        const result = {
+            ...createdTherapist,
+            message: "Cadastro realizado com sucesso!"
+        };
+
+        
         return { httpStatus: HttpStatus.OK, result };
     }
 

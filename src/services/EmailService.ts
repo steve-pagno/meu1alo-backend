@@ -1,34 +1,71 @@
+import { log } from 'console';
 import nodemailer from 'nodemailer';
 
 export class EmailService {
     private static transporter = nodemailer.createTransport({
-        host: "smtp.mailersend.net",
-        port: 2525,
+        host: process.env.SMTP_HOST || "smtp.mailersend.net",
+        port: Number(process.env.SMTP_PORT) || 2525,
         auth: {
-            // Lembre-se de usar variáveis de ambiente em produção!
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
         }
     });
 
-    static async sendRecoveryEmail(email: string, newPass: string) {
+    private static getLogoUrl(): string {
+        const port = process.env.SERVER_PORT || 8101;
+        const baseUrl = process.env.API_BASE_URL || `http://localhost:${port}`;
+        
+        return `${baseUrl.replace(/\/$/, '')}/public/logo_branca.png`;
+        
+    }
+    
+
+    private static getTemplate(title: string, content: string): string {
+        const primaryColor = "#5D307A"; 
+        const logoUrl = this.getLogoUrl();
+        
+        return `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 40px 0; margin: 0;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    
+                    <div style="background-color: ${primaryColor}; padding: 30px; text-align: center;">
+                        <img src="${logoUrl}" alt="Meu Primeiro Alô" style="max-height: 60px; width: auto;" />
+                        <h1 style="color: #ffffff; font-size: 20px; margin: 10px 0 0 0; font-weight: normal;">${title}</h1>
+                    </div>
+
+                    <div style="padding: 40px 30px; color: #333333; line-height: 1.6; font-size: 16px;">
+                        ${content}
+                    </div>
+
+                    <div style="background-color: #eeeeee; padding: 20px; text-align: center; font-size: 12px; color: #888888;">
+                        <p style="margin: 0;">&copy; ${new Date().getFullYear()} Meu Primeiro Alô. Todos os direitos reservados.</p>
+                        <p style="margin: 5px 0 0 0;">Não responda a este e-mail.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    static async sendRecoveryEmail(email: string, newPass: string, ipAddress: string) {
         try {
+            const htmlContent = `
+                <h2 style="color: #5D307A; margin-top: 0;">Olá,</h2>
+                <p>Recebemos uma solicitação para redefinir sua senha no <b>Meu Primeiro Alô</b>.</p>
+                <p style="font-size: 14px; color: #666; margin-bottom: 20px;">
+                    A solicitação foi feita a partir do endereço IP: <strong>${ipAddress}</strong>
+                </p>
+                <p>Sua nova senha temporária é:</p>
+                <div style="background: #f8f9fa; border: 2px dashed #5D307A; padding: 15px; border-radius: 8px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 3px; color: #333; margin: 30px 0;">
+                    ${newPass}
+                </div>
+                <p>Por questões de segurança, recomendamos que você faça login e altere esta senha imediatamente na área "Minha Conta".</p>
+            `;
+
             await this.transporter.sendMail({
                 from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
                 to: email,
                 subject: "Recuperação de Senha - Meu Primeiro Alô",
-                html: `
-                    <div style="font-family: Arial, sans-serif; color: #333;">
-                        <h2 style="color: #4CAF50;">Recuperação de Senha</h2>
-                        <p>Olá,</p>
-                        <p>Recebemos uma solicitação para redefinir sua senha no <b>Meu Primeiro Alô</b>.</p>
-                        <p>Sua nova senha temporária é:</p>
-                        <div style="background: #f4f4f4; padding: 15px; border-radius: 5px; font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 2px;">
-                            ${newPass}
-                        </div>
-                        <p>Por favor, faça login e altere esta senha imediatamente na área "Minha Conta".</p>
-                    </div>
-                `
+                html: this.getTemplate("Recuperação de Senha", htmlContent)
             });
             console.log(`Email de recuperação enviado para ${email}`);
             return true;
@@ -40,30 +77,22 @@ export class EmailService {
 
     static async sendWelcomeEmail(email: string, name: string) {
         try {
+            const htmlContent = `
+                <h2 style="color: #5D307A; margin-top: 0;">Bem-vindo, ${name}! 🎉</h2>
+                <p>Estamos muito felizes em ter você conosco no <b>Meu Primeiro Alô</b>.</p>
+                <p>Seu cadastro foi realizado com sucesso.</p>
+                <div style="text-align: center; margin: 40px 0;">
+                    <a href="http://localhost:3000/login" style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
+                        Acessar Minha Conta
+                    </a>
+                </div>
+            `;
+
             await this.transporter.sendMail({
                 from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
                 to: email,
-                subject: "Bem-vindo ao Meu Primeiro Alô! 🎉",
-                html: `
-                    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
-                        <div style="background-color: #4CAF50; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-                            <h1 style="color: white; margin: 0;">Bem-vindo!</h1>
-                        </div>
-                        <div style="padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;">
-                            <p style="font-size: 16px;">Olá <strong>${name}</strong>,</p>
-                            
-                            <p>Estamos muito felizes em ter você conosco no <b>Meu Primeiro Alô</b>.</p>
-                            
-                            <p>Seu cadastro foi realizado com sucesso. Agora você pode acessar a plataforma para gerenciar triagens, acompanhar resultados e muito mais.</p>
-                            
-                            <div style="text-align: center; margin: 30px 0;">
-                                <a href="http://localhost:3000/login" style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Acessar Minha Conta</a>
-                            </div>
-
-                            <p style="font-size: 14px; color: #777;">Se tiver qualquer dúvida, nossa equipe está à disposição.</p>
-                        </div>
-                    </div>
-                `
+                subject: "Bem-vindo ao Meu Primeiro Alô!",
+                html: this.getTemplate("Bem-vindo!", htmlContent)
             });
             console.log(`Email de boas-vindas enviado para ${name}`);
             return true;
@@ -72,4 +101,5 @@ export class EmailService {
             return false;
         }
     }
+
 }

@@ -5,6 +5,7 @@ import DataSource from './config/DataSource';
 import EnvConfig from './config/EnvConfig';
 import Routes from './controllers/Routes';
 import SwaggerGenerateHelper from './helpers/SwaggerGenerateHelper';
+import path from 'path'
 
 export default class Server {
     private readonly express: Application = Express();
@@ -30,6 +31,7 @@ export default class Server {
         this.express.use(Express.urlencoded({ extended: true }));
         /* Setup CORS, adding this options to all response headers. */
         this.express.use(Cors());
+        this.express.use('/public', Express.static(path.join(process.cwd(), 'public')));
 
         return this;
     }

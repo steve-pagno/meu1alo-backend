@@ -34,6 +34,12 @@ export default class UserController {
         try {
             const { email, userType } = params;
 
+            // --- Lógica de captura de IP ---
+            // Tenta pegar o IP do cabeçalho x-forwarded-for (comum em proxies/nginx) ou define como não identificado
+            const forwarded = headers['x-forwarded-for'];
+            const requestIp = (Array.isArray(forwarded) ? forwarded[0] : forwarded) || 'IP não identificado';
+            // -------------------------------
+
             if (!userType || !MappingUser[userType as UserString]) {
                 return { 
                     httpStatus: HttpStatus.BAD_REQUEST, 
@@ -55,6 +61,7 @@ export default class UserController {
             });
 
             if (!user) {
+                // Segurança: Não revelar se o email existe ou não
                 return { 
                     httpStatus: HttpStatus.OK, 
                     result: { message: "Se o e-mail estiver cadastrado, a senha foi enviada." } 
@@ -67,7 +74,8 @@ export default class UserController {
             user.password = passwordHash;
             await repo.save(user);
 
-            await EmailService.sendRecoveryEmail(email, newPass);
+            // Passando o IP para o serviço de email
+            await EmailService.sendRecoveryEmail(email, newPass, requestIp);
 
             return { 
                 httpStatus: HttpStatus.OK, 
