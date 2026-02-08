@@ -1,12 +1,11 @@
 import { HttpStatus } from '../../helpers/http/AbstractHttpErrors';
-import { ReferralService } from '../../entity/referral_service/ReferralService';
 import ReferralServiceService from './ReferralServiceService';
 
 export default class ReferralServiceController {
-    public async create(referralService: ReferralService) {
+    public async create(payload: any) {
         const referralServiceService = new ReferralServiceService();
 
-        const result = referralServiceService.create(referralService);
+        const result = await referralServiceService.create(payload);
 
         return { httpStatus: HttpStatus.OK, result };
     }
