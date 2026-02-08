@@ -3,7 +3,8 @@ import { Institution } from '../../entity/institution/Institution';
 import { InstitutionUser } from '../../entity/institution/InstitutionUser';
 import UserService from '../users/UserService';
 import InstitutionService from './InstitutionService';
-import dataSource from '../../config/DataSource'
+import dataSource from '../../config/DataSource';
+import { EmailService } from '../../services/EmailService';
 
 export default class InstitutionController {
     public async create(institutionUser: any) {
@@ -11,11 +12,12 @@ export default class InstitutionController {
         const userService = new UserService();
 
         const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect(); // Certifique-se de conectar
         await queryRunner.startTransaction();
 
         const manager = queryRunner.manager;
         try {
-            if(!institutionUser.institution.id) {
+            if (!institutionUser.institution.id) {
                 const institution = await institutionService.create(institutionUser.institution, manager);
                 institutionUser.institution = { id: institution.id } as Institution;
             }
@@ -25,14 +27,28 @@ export default class InstitutionController {
             result.phones = await institutionService.savePhones(result.id, institutionUser.phones as unknown as string[], manager);
 
             await queryRunner.commitTransaction();
+
+            try {
+                if (institutionUser.login) {
+                    await EmailService.sendWelcomeEmail(
+                        institutionUser.login,
+                        institutionUser.name || "Responsável Institucional"
+                    );
+                }
+            } catch (mailError) {
+                console.error("Erro ao enviar e-mail de boas-vindas:", mailError);
+            }
+
             return { httpStatus: HttpStatus.OK, result };
-        }catch (err) {
+        } catch (err) {
             await queryRunner.rollbackTransaction();
             throw err;
+        } finally {
+            await queryRunner.release();
         }
     }
 
-    public async getOne(params: {id: number}) {
+    public async getOne(params: { id: number }) {
         const institutionService = new InstitutionService();
 
         const result = await institutionService.findOneById(params.id);

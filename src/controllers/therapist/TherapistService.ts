@@ -23,7 +23,7 @@ export default class TherapistService {
 
             await queryRunner.commitTransaction();
             return therapist;
-        }catch (err) {
+        } catch (err) {
             await queryRunner.rollbackTransaction();
             throw err;
         }
@@ -33,21 +33,23 @@ export default class TherapistService {
     public async isATherapistUser(therapist: Therapist): Promise<void> {
         const therapist2 = await this.therapistRepository.findLogin(therapist);
 
-        if(therapist2){
+        if (therapist2) {
             throw new OnFindTherapistError(therapist2.id.toString());
         }
     }
 
+    // No arquivo TherapistService.ts
     public async isAExistentTherapist(therapistId: number): Promise<Therapist> {
         const therapist = await this.therapistRepository.getEditableFields(therapistId);
 
-        if(!therapist){
+        // Esta verificação if(!therapist) já funciona tanto para null como para undefined
+        if (!therapist) {
             throw new NotFoundTherapistError(therapistId.toString());
         }
-        return therapist;
+        return therapist; // Aqui o TS entenderá que se passou pelo IF, o objeto existe
     }
 
-    public async getDashboard(): Promise<{type: string}[]> {
+    public async getDashboard(): Promise<{ type: string }[]> {
         return [
             { type: 'baby-pass-fail' },
             // { type: 'baby-come-born' },

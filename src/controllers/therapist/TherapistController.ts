@@ -5,6 +5,7 @@ import CryptoHelper from '../../helpers/CryptoHelper';
 import TherapistService from './TherapistService';
 import { TherapistXP, TherapistXPString } from './TherapistTypes';
 import { EmailService } from '../../services/EmailService';
+import { JwtUserInterface } from '../../helpers/JwtAuth';
 
 export default class TherapistController {
     public async create(therapist: Therapist) {
@@ -34,11 +35,11 @@ export default class TherapistController {
             message: "Cadastro realizado com sucesso!"
         };
 
-        
+
         return { httpStatus: HttpStatus.OK, result };
     }
 
-    public async getEditableFields(params: {id: number}) {
+    public async getEditableFields(params: { id: number }) {
         const therapistService = new TherapistService();
 
         const therapistId = params.id;
@@ -59,6 +60,22 @@ export default class TherapistController {
     public async getXpTypes() {
         const therapistService = new TherapistService();
         const result = await therapistService.getXpTypes();
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async getMe(user: JwtUserInterface) {
+        const therapistService = new TherapistService();
+
+        // O ID deve ser extraído do jwtObject conforme definido na interface
+        const therapistId = user.jwtObject.id;
+
+        // Buscamos o terapeuta. 
+        // Certifique-se que o service.getById ou isAExistentTherapist traga as relações.
+        const therapist = await therapistService.isAExistentTherapist(Number(therapistId));
+
+        // O objeto 'therapist' agora deve conter emails, phones e address se o Service buscar as relações.
+        const result = { ...therapist };
+
         return { httpStatus: HttpStatus.OK, result };
     }
 }

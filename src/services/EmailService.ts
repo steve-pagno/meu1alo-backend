@@ -58,7 +58,7 @@ export class EmailService {
                 <div style="background: #f8f9fa; border: 2px dashed #5D307A; padding: 15px; border-radius: 8px; font-size: 28px; font-weight: bold; text-align: center; letter-spacing: 3px; color: #333; margin: 30px 0;">
                     ${newPass}
                 </div>
-                <p>Por questões de segurança, recomendamos que você faça login e altere esta senha imediatamente na área "Minha Conta".</p>
+                <p>Por questões de segurança, recomendamos que você faça login e altere esta senha imediatamente na área "Meu Perfil".</p>
             `;
 
             await this.transporter.sendMail({
@@ -82,7 +82,7 @@ export class EmailService {
                 <p>Estamos muito felizes em ter você conosco no <b>Meu Primeiro Alô</b>.</p>
                 <p>Seu cadastro foi realizado com sucesso.</p>
                 <div style="text-align: center; margin: 40px 0;">
-                    <a href="http://localhost:3000/login" style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
+                    <a href="meuprimeiroalo.com.br" style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
                         Acessar Minha Conta
                     </a>
                 </div>

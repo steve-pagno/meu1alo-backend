@@ -18,19 +18,25 @@ export class JwtAuth {
         }
 
         try {
-            req.body.jwtObject = jwt.verify(String(token).replace('Bearer ', ''), JwtAuth.SECRET);
-        } catch (err) {
-            return res.status(HttpStatus.UNAUTHORIZED).send('Invalid Token');
+            const decoded = jwt.verify(String(token).replace('Bearer ', ''), JwtAuth.SECRET);
+            req.body.jwtObject = decoded;
+        } catch (err: any) {
+            const message = err?.name === 'TokenExpiredError' ? 'Session Expired' : 'Invalid Token';
+            return res.status(HttpStatus.UNAUTHORIZED).send(message);
         }
 
         return next();
     }
 
     public createJWToken(obj: object): string {
-        return jwt.sign(obj, JwtAuth.SECRET);
+        const expiresInValue = (process.env.JWT_EXPIRES_IN || '1h') as jwt.SignOptions['expiresIn'];
+
+        return jwt.sign(obj, JwtAuth.SECRET, {
+            expiresIn: expiresInValue
+        });
     }
 }
 
 export interface JwtUserInterface {
-    jwtObject: {id: number}
+    jwtObject: { id: number }
 }
