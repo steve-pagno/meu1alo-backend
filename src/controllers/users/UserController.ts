@@ -19,7 +19,10 @@ export default class UserController {
             throw new AuthUserError();
         }
 
-        const [login, password] = Buffer.from(bearerHeader.replace('Basic ', ''), 'base64').toString().split(':');
+        const [login, password] = Buffer.from(bearerHeader.replace('Basic ', ''), 'base64')
+            .toString()
+            .split(':');
+
         const authObj: AuthUser = { login, password };
 
         const user: User = await userService.findOne(params.userType, authObj);
@@ -30,63 +33,81 @@ export default class UserController {
         return { httpStatus: HttpStatus.OK, result };
     }
 
-    public async recoverPassword(params: { email: string, userType: string }, headers: IncomingHttpHeaders) {
+    public async recoverPassword(
+        params: { email: string; userType: string },
+        headers: IncomingHttpHeaders
+    ) {
         try {
-            const { email, userType } = params;
+            const rawEmail = params.email ?? '';
+            const email = rawEmail.trim().toLowerCase();
+            const { userType } = params;
 
-            // --- Lógica de captura de IP ---
-            // Tenta pegar o IP do cabeçalho x-forwarded-for (comum em proxies/nginx) ou define como não identificado
+            // ✅ Captura IP com o melhor possível via headers (proxy / nginx / cloud)
             const forwarded = headers['x-forwarded-for'];
-            const requestIp = (Array.isArray(forwarded) ? forwarded[0] : forwarded) || 'IP não identificado';
-            // -------------------------------
+            const xRealIp = headers['x-real-ip'];
+
+            const ipFromXff = Array.isArray(forwarded)
+                ? forwarded[0]
+                : (typeof forwarded === 'string' ? forwarded.split(',')[0]?.trim() : undefined);
+
+            const ipFromXRealIp = Array.isArray(xRealIp)
+                ? xRealIp[0]
+                : (typeof xRealIp === 'string' ? xRealIp.trim() : undefined);
+
+            const requestIp = ipFromXff || ipFromXRealIp || 'IP não identificado';
 
             if (!userType || !MappingUser[userType as UserString]) {
-                return { 
-                    httpStatus: HttpStatus.BAD_REQUEST, 
-                    result: { message: "Tipo de usuário inválido." } 
+                return {
+                    httpStatus: HttpStatus.BAD_REQUEST,
+                    result: { message: 'Tipo de usuário inválido.' },
+                };
+            }
+
+            if (!email) {
+                return {
+                    httpStatus: HttpStatus.BAD_REQUEST,
+                    result: { message: 'E-mail é obrigatório.' },
                 };
             }
 
             const entityClass = MappingUser[userType as UserString];
             const repo = dataSource.getRepository(entityClass);
 
-            // @ts-ignore
-            const user = await repo.findOne({
-                where: {
-                    emails: {
-                        email: email
-                    }
-                },
-                relations: ['emails']
-            });
+            // ✅ Busca robusta pelo e-mail via JOIN (funciona para InstitutionUser, Therapist, etc.)
+            const user = await repo
+                .createQueryBuilder('u')
+                .leftJoinAndSelect('u.emails', 'e')
+                .where('LOWER(e.email) = :email', { email })
+                .getOne();
 
             if (!user) {
-                // Segurança: Não revelar se o email existe ou não
-                return { 
-                    httpStatus: HttpStatus.OK, 
-                    result: { message: "Se o e-mail estiver cadastrado, a senha foi enviada." } 
+                // Segurança: não revela se existe ou não
+                return {
+                    httpStatus: HttpStatus.OK,
+                    result: { message: 'Se o e-mail estiver cadastrado, a senha foi enviada.' },
                 };
             }
 
             const newPass = Math.random().toString(36).slice(-8);
             const passwordHash = CryptoHelper.encrypt(newPass);
-            
+
+            // @ts-ignore (depende do tipo concreto)
             user.password = passwordHash;
             await repo.save(user);
 
-            // Passando o IP para o serviço de email
-            await EmailService.sendRecoveryEmail(email, newPass, requestIp);
+            const userName = (user as any)?.name || 'usuário';
 
-            return { 
-                httpStatus: HttpStatus.OK, 
-                result: { message: "Sucesso! Verifique seu e-mail." } 
+            await EmailService.sendRecoveryEmail(email, newPass, requestIp, userName);
+
+            return {
+                httpStatus: HttpStatus.OK,
+                result: { message: 'Sucesso! Verifique seu e-mail.' },
             };
-
         } catch (error) {
-            console.error("Erro no recoverPassword:", error);
-            return { 
-                httpStatus: HttpStatus.INTERNAL_SERVER_ERROR, 
-                result: { message: "Erro interno ao processar solicitação." } 
+            console.error('Erro no recoverPassword:', error);
+            return {
+                httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+                result: { message: 'Erro interno ao processar solicitação.' },
             };
         }
     }
