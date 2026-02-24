@@ -37,4 +37,12 @@ export default class ZoneRepository {
         } as FindOneOptions);
         return zone.recover();
     }
+
+    public async create(zoneData: any): Promise<Zone> {
+        // Cria a instância da região com o nome da secretaria e o id do estado
+        const newZone = Zone.create(zoneData);
+        
+        // Salva na tabela 'regiao'
+        return await Zone.save(newZone);
+    }
 }

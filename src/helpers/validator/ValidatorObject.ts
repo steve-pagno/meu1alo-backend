@@ -10,6 +10,11 @@ export class ValidatorObject extends Validator<object>{
 
         super.addFunction(new class implements ValidatorFunction<object> {
             execute(value: any): void {
+                if (value === null || value === undefined) {
+                    return;
+                }
+                // --------------------------------
+                
                 for (const field of fields) {
                     let valueObj = undefined;
                     try {

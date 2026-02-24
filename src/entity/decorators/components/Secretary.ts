@@ -1,4 +1,4 @@
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsOptional } from 'class-validator'; // <-- 1. Adicione o IsOptional aqui
 import { Column, OneToMany } from 'typeorm';
 import { SecretaryUser as User } from '../../secretaries/user/SecretaryUser';
 
@@ -14,6 +14,7 @@ export class SecretaryComponent {
     })
     name: string;
 
+    @IsOptional() // <-- 2. ADICIONE ESSA LINHA PARA NÃO DAR ERRO QUANDO ESTIVER VAZIO
     @IsEmail({}, { each: true })
     @Column({ comment: 'Endereços de email para contato', name: 'emails', nullable: true,
         type: 'simple-array',

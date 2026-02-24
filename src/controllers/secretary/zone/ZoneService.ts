@@ -8,6 +8,11 @@ export default class ZoneService {
         this.zoneRepository = new ZoneRepository();
     }
 
+    // --- NOVO MÉTODO ADICIONADO AQUI ---
+    public async create(zoneData: any) {
+        return await this.zoneRepository.create(zoneData);
+    }
+
     public async getAll(stateId?: number) {
         return this.zoneRepository.getAll(stateId);
     }

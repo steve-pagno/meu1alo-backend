@@ -24,10 +24,11 @@ export default class CityService {
         return city;
     }
 
-    public async updateCityZone(cityId: number, zoneId: number): Promise<City> {
+    public async updateCityZone(cityId: number, zoneId: number | null): Promise<City> {
         const city = await this.getById(cityId);
 
-        city.zone = { id: zoneId } as Zone;
+        city.zone = (zoneId ? { id: zoneId } : null) as unknown as Zone;
+
         return this.cityRepository.updateCityZone(city);
     }
 
@@ -43,7 +44,7 @@ export default class CityService {
 
     private async getCitiesByZoneId(zone: any): Promise<GetCitiesWithAndWithoutZoneContract> {
         const values = await this.cityRepository.getCitiesByZoneId(zone.id);
-        return { ...zone,  values };
+        return { ...zone, values };
     }
 
     private async getCitiesWithoutZoneByStateId(stateId: number): Promise<GetCitiesWithAndWithoutZoneContract> {

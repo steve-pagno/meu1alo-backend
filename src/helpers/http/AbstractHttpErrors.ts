@@ -1,5 +1,6 @@
 export enum HttpStatus {
     OK = 200, //
+    CREATED = 201,
     BAD_REQUEST = 400, // Client sent an invalid request — such as lacking required request body or parameter
     UNAUTHORIZED = 401, // Client failed to authenticate with the server
     FORBIDDEN = 403, // Client authenticated but does not have permission to access the requested resource

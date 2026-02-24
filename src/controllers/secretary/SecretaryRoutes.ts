@@ -22,6 +22,11 @@ export default class SecretaryRoutes extends AbstractRoutes {
 
         this.getDashboard();
         this.getIsState();
+        
+        // --- NOVAS ROTAS ADICIONADAS AQUI ---
+        this.getById();
+        this.update();
+        this.create();
     }
 
     private getDashboard(): void {
@@ -37,7 +42,7 @@ export default class SecretaryRoutes extends AbstractRoutes {
 
     private getIsState(): void {
         const config: RouteConfig = {
-            description: 'Endpoint para recuperar todos os reports do dashboard de uma secretaria',
+            description: 'Endpoint para verificar se a secretaria é estadual',
             method: 'get',
             params: new ValidatorRequest(undefined, undefined, new ValidatorObject('params', [
                 new ValidatorNumber('id').min(1).required(true).withExample(1)
@@ -46,5 +51,47 @@ export default class SecretaryRoutes extends AbstractRoutes {
             withJWT: true
         };
         this.addRoute<{id: number}>(config, this.secretaryController.getIsState);
+    }
+
+    // RF5 - Rota para BUSCAR os dados da secretaria na hora de editar
+    private getById(): void {
+        const config: RouteConfig = {
+            description: 'Recuperar dados da secretaria pelo ID',
+            method: 'get',
+            params: new ValidatorRequest(undefined, undefined, new ValidatorObject('params', [
+                new ValidatorNumber('id').min(1).required(true).withExample(1)
+            ])),
+            path: '/:id',
+            withJWT: true
+        };
+        // Aqui conectamos com o método "get" do Controller
+        this.addRoute<{id: number}>(config, this.secretaryController.get);
+    }
+
+    // RF5 - Rota para SALVAR as edições (PUT)
+    private update(): void {
+        const config: RouteConfig = {
+            description: 'Atualiza os dados da secretaria',
+            method: 'put',
+            // Valida o id na URL. O corpo (body) vai livre por enquanto
+            params: new ValidatorRequest(new ValidatorObject('body', []), undefined, new ValidatorObject('params', [
+                new ValidatorNumber('id').min(1).required(true).withExample(1)
+            ])),
+            path: '/:id',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.secretaryController.update);
+    }
+
+    // RF4 - Rota para CRIAR uma nova secretaria (POST)
+    private create(): void {
+        const config: RouteConfig = {
+            description: 'Cria uma nova secretaria municipal',
+            method: 'post',
+            params: new ValidatorRequest(new ValidatorObject('body', [])),
+            path: '/',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.secretaryController.create);
     }
 }

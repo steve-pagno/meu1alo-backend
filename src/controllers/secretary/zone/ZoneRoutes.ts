@@ -15,11 +15,27 @@ export default class ZoneRoutes extends AbstractRoutes {
         this.zoneController = new ZoneController();
 
         this.createZoneUser();
+        this.create(); // <-- AQUI: Chamamos a nova rota de criação
         this.deleteZone();
         this.recoverZone();
         this.getAll();
         this.getAllWithCities();
         this.getById();
+    }
+
+    // --- NOVA ROTA ADICIONADA AQUI ---
+    private create(): void {
+        const config: RouteConfig = {
+            description: 'Endpoint para criar uma nova região',
+            method: 'post',
+            params: new ValidatorRequest(new ValidatorObject('body', [
+                new ValidatorObject('secretary', []).required(true),
+                new ValidatorObject('state', []).required(true)
+            ]).required(true)),
+            path: '/', // Rota base: POST /secretary/zone
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.zoneController.create);
     }
 
     private getAll(): void {
@@ -61,7 +77,7 @@ export default class ZoneRoutes extends AbstractRoutes {
 
     private createZoneUser(): void {
         const config: RouteConfig = {
-            description: 'Endpoint para criar uma região',
+            description: 'Endpoint para criar uma região (usuário)',
             method: 'post',
             params: new ValidatorRequest(new ValidatorObject('body', [
                 //TODO: ajustar parametros

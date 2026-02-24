@@ -51,8 +51,8 @@ export default class CityRoutes extends AbstractRoutes {
                 new ValidatorObject('body', [
                     new ValidatorObject('zone', [
                         new ValidatorNumber('id').min(1).required(true).withExample(1)
-                    ]).required(true)
-                ]).required(true),
+                    ]).required(false) // <-- REMOVIDO o .allowNull(true)
+                ]).required(false),
                 undefined,
                 new ValidatorObject('params', [
                     new ValidatorNumber('id').min(1).required(true).withExample(1)
@@ -61,6 +61,7 @@ export default class CityRoutes extends AbstractRoutes {
             path: '/:id',
             withJWT: true
         };
-        this.addRoute<{id: number, zone: {id: number}}>(config, this.cityController.updateCityZone);
+        
+        this.addRoute<{id: number, zone?: {id: number} | null}>(config, this.cityController.updateCityZone);
     }
 }
