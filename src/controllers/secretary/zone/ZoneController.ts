@@ -5,10 +5,10 @@ import UserService from '../../users/UserService';
 import CityService from '../city/CityService';
 import SecretaryService from '../SecretaryService';
 import ZoneService from './ZoneService';
+import { EmailService } from '../../../services/EmailService';
 
 export default class ZoneController {
     
-    // --- NOVO MÉTODO ADICIONADO AQUI ---
     public async create(params: any) {
         const zoneService = new ZoneService();
         const result = await zoneService.create(params);
@@ -41,7 +41,38 @@ export default class ZoneController {
 
     public async createZoneUser(params: SecretaryUser) {
         const userService = new UserService();
+
+        const plainPassword = (params as any)?.password || '';
+        const name = (params as any)?.name || 'Secretaria';
+
+        let emailsRecebidos: any = (params as any)?.emails || [];
+        if (!Array.isArray(emailsRecebidos)) {
+            emailsRecebidos = Object.values(emailsRecebidos);
+        }
+
+        const emailStrings = emailsRecebidos
+            .filter((e: any) => e !== null && e !== undefined && e !== '')
+            .map((e: any) => typeof e === 'string' ? e : e?.email)
+            .filter((e: any) => typeof e === 'string' && e.trim() !== '');
+
+        const destinatario = emailStrings[0] || '';
+
         const result = await userService.save<SecretaryUser>('secretary', params);
+
+        if (destinatario && plainPassword) {
+            try {
+                await EmailService.sendNewAccountEmail(destinatario, name, plainPassword);
+                console.log(`Email de nova secretaria enviado para ${destinatario}`);
+            } catch (error) {
+                console.error('Erro ao enviar email da secretaria:', error);
+            }
+        } else {
+            console.warn('Email da secretaria não enviado: faltou destinatário ou senha.', {
+                destinatario,
+                plainPasswordExiste: !!plainPassword
+            });
+        }
+
         return { httpStatus: HttpStatus.OK, result };
     }
 

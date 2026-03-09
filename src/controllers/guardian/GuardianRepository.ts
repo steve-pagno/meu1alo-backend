@@ -6,42 +6,83 @@ import { DuplicateEmail, DuplicatePhone } from '../TemplateErrors';
 
 export default class GuardianRepository {
     public async save(guardian: Guardian, transaction?: EntityManager): Promise<Guardian> {
-        if(transaction) {
+        if (transaction) {
             return transaction.getRepository(Guardian).save(guardian);
         }
+
         return Guardian.save(guardian);
     }
 
-    public saveEmails(id: number, emails: string[], transaction?: EntityManager): Promise<GuardianEmail[]>{
-        const entities = emails.filter(email => email && email.length > 1).map((email) => {
-            const entity = new GuardianEmail();
-            entity.email = email;
-            entity.guardian = { id } as Guardian;
-            return entity;
-        });
+    public async getById(id: number, transaction?: EntityManager): Promise<Guardian | null> {
+        if (transaction) {
+            return transaction.getRepository(Guardian)
+                .createQueryBuilder('guardian')
+                .leftJoinAndSelect('guardian.emails', 'emails')
+                .leftJoinAndSelect('guardian.phones', 'phones')
+                .where('guardian.id = :id', { id })
+                .getOne();
+        }
+
+        return Guardian.createQueryBuilder('guardian')
+            .leftJoinAndSelect('guardian.emails', 'emails')
+            .leftJoinAndSelect('guardian.phones', 'phones')
+            .where('guardian.id = :id', { id })
+            .getOne();
+    }
+
+    public async findByCpf(cpf: string, transaction?: EntityManager): Promise<Guardian | null> {
+        if (transaction) {
+            return transaction.getRepository(Guardian)
+                .createQueryBuilder('guardian')
+                .leftJoinAndSelect('guardian.emails', 'emails')
+                .leftJoinAndSelect('guardian.phones', 'phones')
+                .where('guardian.cpf = :cpf', { cpf })
+                .getOne();
+        }
+
+        return Guardian.createQueryBuilder('guardian')
+            .leftJoinAndSelect('guardian.emails', 'emails')
+            .leftJoinAndSelect('guardian.phones', 'phones')
+            .where('guardian.cpf = :cpf', { cpf })
+            .getOne();
+    }
+
+    public saveEmails(id: number, emails: string[], transaction?: EntityManager): Promise<GuardianEmail[]> {
+        const entities = emails
+            .filter(email => email && email.length > 1)
+            .map((email) => {
+                const entity = new GuardianEmail();
+                entity.email = email;
+                entity.guardian = { id } as Guardian;
+                return entity;
+            });
 
         try {
-            if(transaction) {
+            if (transaction) {
                 return transaction.getRepository(GuardianEmail).save(entities);
             }
+
             return GuardianEmail.save(entities);
         } catch (e: any) {
             throw new DuplicateEmail(e.message);
         }
     }
 
-    public savePhones(id: number, phones: string[], transaction?: EntityManager): Promise<GuardianPhone[]>{
-        const entities = phones.filter(phone => phone && phone.length > 1).map((number) => {
-            const entity = new GuardianPhone();
-            entity.phoneNumber = number;
-            entity.guardian = { id } as Guardian;
-            return entity;
-        });
+    public savePhones(id: number, phones: string[], transaction?: EntityManager): Promise<GuardianPhone[]> {
+        const entities = phones
+            .filter(phone => phone && phone.length > 1)
+            .map((number) => {
+                const entity = new GuardianPhone();
+                entity.phoneNumber = number;
+                entity.guardian = { id } as Guardian;
+                return entity;
+            });
 
         try {
-            if(transaction) {
+            if (transaction) {
                 return transaction.getRepository(GuardianPhone).save(entities);
             }
+
             return GuardianPhone.save(entities);
         } catch (e: any) {
             throw new DuplicatePhone(e.message);

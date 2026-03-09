@@ -1,6 +1,6 @@
 import SecretaryRepository from './SecretaryRepository';
 import { EmailService } from '../../services/EmailService';
-import dataSource from '../../config/DataSource'; // Importante para a transação
+import dataSource from '../../config/DataSource';
 import CryptoHelper from '../../helpers/CryptoHelper';
 
 export default class SecretaryService {
@@ -28,76 +28,94 @@ export default class SecretaryService {
         return result?.state;
     }
 
-    // RF4 - Cadastro de Secretaria (Estadual/Municipal vinculada à região)
     public async create(secretaryData: any) {
-        // 1. Extraímos os dados sensíveis e os contatos ANTES de limpar o objeto
-        const plainPassword = secretaryData.password;
-        const nome = secretaryData.name || 'Secretaria';
-        
-        // Garantimos que emails e phones sejam arrays de strings
-        let emailsRecebidos = secretaryData.emails || [];
-        if (!Array.isArray(emailsRecebidos)) emailsRecebidos = Object.values(emailsRecebidos);
-        
-        let phonesRecebidos = secretaryData.phones || [];
-        if (!Array.isArray(phonesRecebidos)) phonesRecebidos = Object.values(phonesRecebidos);
+        const plainPassword = secretaryData?.password || '';
+        const nome = secretaryData?.name || 'Secretaria';
 
-        // Identifica o destinatário do e-mail (primeiro da lista)
-        let destinatario = '';
-        if (emailsRecebidos.length > 0) {
-            destinatario = typeof emailsRecebidos[0] === 'string' ? emailsRecebidos[0] : emailsRecebidos[0].email;
+        let emailsRecebidos = secretaryData?.emails || [];
+        if (!Array.isArray(emailsRecebidos)) {
+            emailsRecebidos = Object.values(emailsRecebidos);
         }
 
-        // 2. Limpeza de dados para o TypeORM não dar erro de coluna inexistente
+        let phonesRecebidos = secretaryData?.phones || [];
+        if (!Array.isArray(phonesRecebidos)) {
+            phonesRecebidos = Object.values(phonesRecebidos);
+        }
+
+        const emailStrings = emailsRecebidos
+            .filter((e: any) => e !== null && e !== undefined && e !== '')
+            .map((e: any) => typeof e === 'string' ? e : e?.email)
+            .filter((e: any) => typeof e === 'string' && e.trim() !== '');
+
+        const phoneStrings = phonesRecebidos
+            .filter((p: any) => p !== null && p !== undefined && p !== '')
+            .map((p: any) => typeof p === 'string' ? p : (p?.phoneNumber || p?.phone))
+            .filter((p: any) => typeof p === 'string' && p.trim() !== '');
+
+        const destinatario = emailStrings[0] || '';
+
+        console.log('=== CADASTRO SECRETARIA ===');
+        console.log('Nome:', nome);
+        console.log('Password recebida:', !!plainPassword);
+        console.log('Emails recebidos:', emailsRecebidos);
+        console.log('Emails normalizados:', emailStrings);
+        console.log('Destinatário final:', destinatario);
+
         delete secretaryData.emails;
         delete secretaryData.phones;
         delete secretaryData.passwordConfirm;
 
-        // 3. Criptografia da senha (fundamental para o login funcionar)
         if (secretaryData.password) {
             secretaryData.password = CryptoHelper.encrypt(secretaryData.password);
         }
 
-        // 4. Inicia a Transação
         const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
         await queryRunner.startTransaction();
         const manager = queryRunner.manager;
 
         try {
-            // Salva a secretaria na tabela principal usando o 'manager' da transação
             let newSecretary = await this.secretaryRepository.create(secretaryData, manager);
 
-            // Prepara os arrays de strings limpos
-            const emailStrings = emailsRecebidos.filter((e: any) => e).map((e: any) => typeof e === 'string' ? e : e.email);
-            const phoneStrings = phonesRecebidos.filter((p: any) => p).map((p: any) => typeof p === 'string' ? p : p.phone);
-
-            // Salva os e-mails e telefones nas tabelas filhas vinculando ao ID gerado
             if (emailStrings.length > 0) {
-                newSecretary.emails = await this.secretaryRepository.saveEmails(newSecretary.id, emailStrings, manager);
-            }
-            if (phoneStrings.length > 0) {
-                newSecretary.phones = await this.secretaryRepository.savePhones(newSecretary.id, phoneStrings, manager);
+                newSecretary.emails = await this.secretaryRepository.saveEmails(
+                    newSecretary.id,
+                    emailStrings,
+                    manager
+                );
             }
 
-            // Confirma a transação no banco de dados
+            if (phoneStrings.length > 0) {
+                newSecretary.phones = await this.secretaryRepository.savePhones(
+                    newSecretary.id,
+                    phoneStrings,
+                    manager
+                );
+            }
+
             await queryRunner.commitTransaction();
 
-            // 5. Envia o e-mail de boas-vindas
             if (destinatario && plainPassword) {
-                EmailService.sendNewAccountEmail(destinatario, nome, plainPassword).catch(e => 
-                    console.error("Erro ao enviar email de criação:", e)
-                );
+                console.log('Tentando enviar email para secretaria...');
+                const enviado = await EmailService.sendNewAccountEmail(destinatario, nome, plainPassword);
+                console.log('Resultado envio secretaria:', enviado);
+            } else {
+                console.warn('Email da secretaria não enviado: faltou destinatário ou senha.', {
+                    destinatario,
+                    plainPasswordExiste: !!plainPassword
+                });
             }
 
             return newSecretary;
         } catch (error) {
-            // Se houver qualquer erro (duplicidade, falta de campo, etc), desfaz tudo
             await queryRunner.rollbackTransaction();
-            console.error("Erro no cadastro de secretaria:", error);
+            console.error('Erro no cadastro de secretaria:', error);
             throw error;
+        } finally {
+            await queryRunner.release();
         }
     }
 
-    // RF5 - Edição das informações da Secretaria
     public async update(id: number, updateData: any) {
         if (updateData.password && updateData.password !== updateData.passwordConfirm) {
             throw new Error('As senhas não coincidem.');
@@ -120,7 +138,7 @@ export default class SecretaryService {
         if (updateData.phones && Array.isArray(updateData.phones)) {
             updateData.phones = updateData.phones
                 .filter((p: string) => p && p.trim() !== '')
-                .map((p: string) => ({ phone: p }));
+                .map((p: string) => ({ phoneNumber: p }));
         }
 
         return await this.secretaryRepository.update(id, updateData);
@@ -128,16 +146,17 @@ export default class SecretaryService {
 
     public async getById(id: number) {
         const result = await this.secretaryRepository.getById(id);
-        if (!result) throw new Error('Secretaria não encontrada');
-        
-        const { password, ...safeResult } = result; 
-        
-        const formattedResult = {
+
+        if (!result) {
+            throw new Error('Secretaria não encontrada');
+        }
+
+        const { password, ...safeResult } = result;
+
+        return {
             ...safeResult,
             emails: safeResult.emails ? safeResult.emails.map((e: any) => e.email) : [],
-            phones: safeResult.phones ? safeResult.phones.map((p: any) => p.phone) : []
+            phones: safeResult.phones ? safeResult.phones.map((p: any) => p.phoneNumber) : []
         };
-
-        return formattedResult;
     }
 }

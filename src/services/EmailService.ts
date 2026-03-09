@@ -48,7 +48,6 @@ export class EmailService {
       const safeName = String(name ?? "").trim();
       const greeting = safeName ? `Olá, ${safeName}!` : "Olá,";
 
-
       const safeIp =
         (ipAddress ?? "").trim() && ipAddress !== "IP não identificado"
           ? ipAddress
@@ -138,6 +137,42 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error("Erro ao enviar email de nova conta:", error);
+      return false;
+    }
+  }
+
+  static async sendGuardianAccountEmail(email: string, name: string, cpfLogin: string, plainPassword: string) {
+    try {
+      const htmlContent = `
+        <h2 style="color: #5D307A; margin-top: 0;">Olá, ${name}! 👶</h2>
+        <p>Seu acesso ao <b>Meu Primeiro Alô</b> foi criado com sucesso.</p>
+        <p>Use os dados abaixo para entrar na plataforma:</p>
+
+        <div style="background: #f8f9fa; border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin: 24px 0;">
+          <p style="margin: 0 0 10px 0;"><strong>Login:</strong> ${cpfLogin}</p>
+          <p style="margin: 0;"><strong>Senha provisória:</strong> ${plainPassword}</p>
+        </div>
+
+        <p>Por segurança, recomendamos que você altere sua senha no primeiro acesso.</p>
+
+        <div style="text-align: center; margin: 40px 0;">
+          <a href="https://meuprimeiroalo.com.br" style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
+            Acessar Minha Conta
+          </a>
+        </div>
+      `;
+
+      await this.transporter.sendMail({
+        from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
+        to: email,
+        subject: "Seu acesso foi criado - Meu Primeiro Alô",
+        html: this.getTemplate("Acesso Criado!", htmlContent)
+      });
+
+      console.log(`Email de acesso do responsável enviado para ${email}`);
+      return true;
+    } catch (error) {
+      console.error("Erro ao enviar email de acesso do responsável:", error);
       return false;
     }
   }

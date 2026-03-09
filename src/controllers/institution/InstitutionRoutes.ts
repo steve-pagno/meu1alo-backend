@@ -29,7 +29,7 @@ export default class InstitutionRoutes extends AbstractRoutes {
                 //TODO: ajustar parametros
             ]).withDescription('Instituição').required(true)),
             path: '/',
-            withJWT: false
+            withJWT: true
         };
         this.addRoute<InstitutionUser>(config, this.institutionController.create);
     }
@@ -53,7 +53,7 @@ export default class InstitutionRoutes extends AbstractRoutes {
             method: 'get',
             params: new ValidatorRequest(),
             path: '/',
-            withJWT: false
+            withJWT: true
         };
         this.addRoute<never>(config, this.institutionController.getAll);
     }
