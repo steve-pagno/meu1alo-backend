@@ -2,22 +2,22 @@ import { HttpStatus } from '../../../helpers/http/AbstractHttpErrors';
 import { ResponseHttpController } from '../../../helpers/http/AbstractRoutesTypes';
 import { Indicator } from '../../../entity/indicator/Indicator';
 import { Therapist } from '../../../entity/therapist/Therapist';
-import { Triage, TriageString, TriageType } from '../../../entity/triage/Triage';
+import { Triage, TriageType } from '../../../entity/triage/Triage';
 import BabyService from '../../baby/BabyService';
 import GuardianService from '../../guardian/GuardianService';
 import TriageService from './TriageService';
 import { QueryTriageDTO, TriageJwt } from './TriageTypes';
 import dataSource from '../../../config/DataSource';
 import { EmailService } from '../../../services/EmailService';
+import { buildFlowConduct, resolveRiskCategory, shouldUsePeateA } from '../../../helpers/triage/TriageFlowHelper';
+import ConductService from '../conduct/ConductService';
+import { Conduct } from '../../../entity/conduct/Conduct';
 
 export default class TriageController {
     public async create(triageJson: TriageJwt) {
         const guardianService = new GuardianService();
         const babyService = new BabyService();
         const triageService = new TriageService();
-
-        triageJson.type = TriageType[triageJson.type as unknown as TriageString];
-        triageJson.therapist = { id: triageJson.jwtObject.id } as Therapist;
 
         const queryRunner = dataSource.createQueryRunner();
         await queryRunner.connect();
@@ -42,13 +42,68 @@ export default class TriageController {
 
             triageJson.baby = await babyService.create(triageJson.baby, true, manager);
 
-            if (triageJson.indicators) {
-                triageJson.indicators = triageJson.indicators.map(
-                    (id) => ({ id: (id as unknown as number) } as Indicator)
-                );
+            const selectedIndicatorIds = Array.isArray(triageJson.indicators)
+                ? triageJson.indicators.map((indicator) =>
+                    typeof indicator === 'number' ? indicator : Number(indicator.id)
+                )
+                : [];
+
+            const selectedIndicators = await Promise.all(
+                selectedIndicatorIds.map(async (indicatorId) =>
+                    manager.getRepository(Indicator).findOne({ where: { id: indicatorId } })
+                )
+            );
+
+            const riskCategory = resolveRiskCategory(selectedIndicators.filter(Boolean) as Indicator[]);
+            const usesPeateA = shouldUsePeateA(riskCategory);
+
+            triageJson.eoaLeftEar = triageJson.eoaLeftEar ?? triageJson.leftEar;
+            triageJson.eoaRightEar = triageJson.eoaRightEar ?? triageJson.rightEar;
+
+            if (!usesPeateA) {
+                triageJson.peateaLeftEar = null;
+                triageJson.peateaRightEar = null;
             }
 
-            const result = await triageService.create(triageJson as Triage, manager);
+            const flowResult = buildFlowConduct({
+                riskCategory,
+                testStage: Number(triageJson.testType || 1),
+                eoaLeftEar: Boolean(triageJson.eoaLeftEar),
+                eoaRightEar: Boolean(triageJson.eoaRightEar),
+                peateaLeftEar: triageJson.peateaLeftEar,
+                peateaRightEar: triageJson.peateaRightEar,
+            });
+
+            triageJson.leftEar = flowResult.finalLeftEar;
+            triageJson.rightEar = flowResult.finalRightEar;
+
+            const conductService = new ConductService();
+            const conduct = await conductService.create({
+                resultDescription: flowResult.resultDescription,
+                accompanyDescription: flowResult.accompanyDescription,
+                leftEar: flowResult.finalLeftEar,
+                rightEar: flowResult.finalRightEar,
+                irda: usesPeateA,
+                testType: Number(triageJson.testType || 1),
+                therapist: { id: triageJson.jwtObject.id } as Therapist,
+            } as Conduct);
+
+            triageJson.conduct = conduct;
+
+            const triageIndicators = selectedIndicators
+                .filter(Boolean)
+                .map((indicator) => ({ id: indicator!.id } as Indicator));
+
+            const triageToSave = {
+                ...triageJson,
+                therapist: { id: triageJson.jwtObject.id } as Therapist,
+                indicators: triageIndicators,
+                type: usesPeateA ? TriageType.PEATEA : TriageType.EOET,
+            } as unknown as Triage;
+
+            console.log('TIPO TRIAGEM ANTES DE SALVAR:', triageToSave.type);
+
+            const result = await triageService.create(triageToSave, manager);
 
             await queryRunner.commitTransaction();
 

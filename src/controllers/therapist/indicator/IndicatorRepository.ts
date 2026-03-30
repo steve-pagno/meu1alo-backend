@@ -1,3 +1,4 @@
+import { classifyIndicatorName } from '../../../helpers/triage/TriageFlowHelper';
 import { Indicator } from '../../../entity/indicator/Indicator';
 import { QueryIndicatorJwt } from './IndicatorTypes';
 
@@ -15,6 +16,6 @@ export default class IndicatorRepository {
         if(params.name){
             query.andWhere('indicator.name like :name', { name: `%${params.name}%` });
         }
-        return query.getRawMany();
+        return query.getRawMany().then((items) => items.map((item) => ({ ...item, riskType: classifyIndicatorName(item.name) })));
     }
 }

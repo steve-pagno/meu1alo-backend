@@ -9,8 +9,8 @@ import { Therapist } from '../therapist/Therapist';
 
 export type TriageString = 'EOET' | 'EOEP' | 'PEATEA' | 'EOET_PEATEA';
 export enum TriageType {
-    EOET = 'EOE transitente',
-    EOEP = 'EOE produto de distorção',
+    EOET = 'EOA transiente',
+    EOEP = 'EOA produto de distorção',
     PEATEA = 'PEATE automático',
     EOET_PEATEA = 'EOE transitente + PEATE automático',
 }
@@ -37,6 +37,30 @@ export class Triage extends BaseEntity {
     })
     evaluationDate: Date;
 
+    @Column({
+        comment: 'Resultado da EOA na orelha esquerda', name: 'eoa_orelha_esquerda',
+        nullable: true, type: 'tinyint'
+    })
+    eoaLeftEar?: boolean | null;
+
+    @Column({
+        comment: 'Resultado da EOA na orelha direita', name: 'eoa_orelha_direita',
+        nullable: true, type: 'tinyint'
+    })
+    eoaRightEar?: boolean | null;
+
+    @Column({
+        comment: 'Resultado do PEATE-A na orelha esquerda', name: 'peatea_orelha_esquerda',
+        nullable: true, type: 'tinyint'
+    })
+    peateaLeftEar?: boolean | null;
+
+    @Column({
+        comment: 'Resultado do PEATE-A na orelha direita', name: 'peatea_orelha_direita',
+        nullable: true, type: 'tinyint'
+    })
+    peateaRightEar?: boolean | null;
+
     @Column({ comment: 'Tipo de triagem', enum: TriageType, name: 'tipo_triagem', type: 'enum',
         update: false,
     })
@@ -46,8 +70,6 @@ export class Triage extends BaseEntity {
         type: 'text',
     })
     observation: string;
-
-    // Relacionamentos
 
     @JoinColumn({ name: 'fk_fonoaudiologo' })
     @ManyToOne(() => Therapist, { nullable: false })
