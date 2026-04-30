@@ -78,4 +78,26 @@ export default class TherapistController {
 
         return { httpStatus: HttpStatus.OK, result };
     }
+
+    public async updateMe(params: any) {
+        const therapistService = new TherapistService();
+        // O JWT decodificado é injetado no corpo (body/params) pelo Validator/Auth middleware
+        const therapistId = params.jwtObject.id;
+
+        // Limpa senha vazia ou trata as não preenchidas
+        if (!params.password && params.newPassword) {
+            params.password = params.newPassword; // se frontend usar `newPassword`
+        }
+
+        // Deleta campos de password que não são usados no backend
+        delete params.newPassword;
+        delete params.confirmNewPassword;
+
+        // O front envia "login" mas não podemos permitir alteração deste campo
+        delete params.login;
+
+        const result = await therapistService.update(Number(therapistId), params);
+
+        return { httpStatus: HttpStatus.OK, result };
+    }
 }

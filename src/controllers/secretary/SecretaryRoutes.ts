@@ -24,6 +24,8 @@ export default class SecretaryRoutes extends AbstractRoutes {
         this.getIsState();
         
         // --- NOVAS ROTAS ADICIONADAS AQUI ---
+        this.getMe();
+        this.updateMe();
         this.getById();
         this.update();
         this.create();
@@ -93,5 +95,27 @@ export default class SecretaryRoutes extends AbstractRoutes {
             withJWT: true
         };
         this.addRoute<any>(config, this.secretaryController.create);
+    }
+
+    private getMe(): void {
+        const config: RouteConfig = {
+            description: 'Recuperar dados da minha conta secretaria',
+            method: 'get',
+            params: new ValidatorRequest(),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.secretaryController.getMe);
+    }
+
+    private updateMe(): void {
+        const config: RouteConfig = {
+            description: 'Atualizar dados da minha conta secretaria',
+            method: 'put',
+            params: new ValidatorRequest(new ValidatorObject('body', [])),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.secretaryController.updateMe);
     }
 }

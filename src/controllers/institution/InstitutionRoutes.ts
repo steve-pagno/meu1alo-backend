@@ -13,6 +13,8 @@ export default class InstitutionRoutes extends AbstractRoutes {
     constructor() {
         super();
 
+        this.getMe();
+        this.updateMe();
         this.create();
         this.getDashboard();
         this.getInstitutionTypes();
@@ -53,7 +55,7 @@ export default class InstitutionRoutes extends AbstractRoutes {
             method: 'get',
             params: new ValidatorRequest(),
             path: '/',
-            withJWT: true
+            withJWT: false
         };
         this.addRoute<never>(config, this.institutionController.getAll);
     }
@@ -78,5 +80,27 @@ export default class InstitutionRoutes extends AbstractRoutes {
             withJWT: false
         };
         this.addRoute<never>(config, this.institutionController.getInstitutionTypes);
+    }
+
+    private getMe() {
+        const config: RouteConfig = {
+            description: 'Recuperar dados da minha instituição',
+            method: 'get',
+            params: new ValidatorRequest(),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.getMe);
+    }
+
+    private updateMe() {
+        const config: RouteConfig = {
+            description: 'Atualizar dados da minha instituição',
+            method: 'put',
+            params: new ValidatorRequest(new ValidatorObject('body', [])), // body livre por enquanto
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.updateMe);
     }
 }

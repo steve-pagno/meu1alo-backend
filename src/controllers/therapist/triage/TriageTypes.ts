@@ -34,4 +34,6 @@ export interface QueryTriageDTO {
     rightEar?: number;
     evaluationDate?: Date;
     testType?: number;
+    babyName?: string;
+    responsibleName?: string;
 }

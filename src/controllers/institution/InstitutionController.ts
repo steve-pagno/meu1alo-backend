@@ -90,4 +90,25 @@ export default class InstitutionController {
         const result = await institutionService.getInstitutionTypes();
         return { httpStatus: HttpStatus.OK, result };
     }
+
+    public async getMe(params: any) {
+        const institutionService = new InstitutionService();
+        const userId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        const result = await institutionService.findUserById(userId);
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async updateMe(params: any) {
+        const institutionService = new InstitutionService();
+        const institutionId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+
+        // Limpa campos de senha vazia da interface
+        if (!params.password) {
+            delete params.password;
+            delete params.passwordConfirm;
+        }
+
+        const result = await institutionService.update(institutionId, params);
+        return { httpStatus: HttpStatus.OK, result };
+    }
 }

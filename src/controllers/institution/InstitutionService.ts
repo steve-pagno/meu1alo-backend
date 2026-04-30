@@ -1,4 +1,5 @@
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
+import { InstitutionUser } from '../../entity/institution/InstitutionUser';
 import { Institution } from '../../entity/institution/Institution';
 import { InstitutionEmail } from '../../entity/institution/InstitutionEmail';
 import { InstitutionPhone } from '../../entity/institution/InstitutionPhone';
@@ -90,7 +91,76 @@ export default class InstitutionService {
     }
 
     public async findOneById(id: number) { return this.institutionRepository.findOne({ id }); }
+    
+    public async findUserById(userId: number) {
+        return InstitutionUser.createQueryBuilder('u')
+            .leftJoinAndSelect('u.institution', 'institution')
+            .leftJoinAndSelect('u.emails', 'emails')
+            .leftJoinAndSelect('u.phones', 'phones')
+            .leftJoinAndSelect('institution.address', 'address')
+            .leftJoinAndSelect('address.city', 'city')
+            .where('u.id = :id', { id: userId })
+            .getOne();
+    }
+
     public async findAll() { return this.institutionRepository.findAll(); }
     public async saveEmails(id: number, emails: string[], t?: EntityManager) { return this.institutionRepository.saveEmails(id, emails, t); }
     public async savePhones(id: number, phones: string[], t?: EntityManager) { return this.institutionRepository.savePhones(id, phones, t); }
+
+    public async update(id: number, updateData: any) {
+        if (updateData.password && updateData.password !== updateData.passwordConfirm) {
+            throw new Error('As senhas não coincidem.');
+        }
+
+        if (updateData.password) {
+            const CryptoHelper = require('../../helpers/CryptoHelper').default;
+            updateData.password = CryptoHelper.encrypt(updateData.password);
+        }
+        delete updateData.passwordConfirm;
+        delete updateData.jwtObject;
+
+        // Tratar array de emails e telefones
+        if (updateData.emails && typeof updateData.emails === 'object') {
+            const rawEmails = Array.isArray(updateData.emails) ? updateData.emails : Object.values(updateData.emails);
+            await this.saveEmails(id, rawEmails.filter((e: any) => e) as string[]);
+            delete updateData.emails;
+        }
+
+        if (updateData.phones && typeof updateData.phones === 'object') {
+            const rawPhones = Array.isArray(updateData.phones) ? updateData.phones : Object.values(updateData.phones);
+            await this.savePhones(id, rawPhones.filter((e: any) => e) as string[]);
+            delete updateData.phones;
+        }
+
+        // Tentar formatar CNES e CNPJ e Type e Address se vieram
+        if (updateData.cnpj) updateData.cnpj = updateData.cnpj.replace(/\D/g, '');
+        if (updateData.cnes) updateData.cnes = updateData.cnes.replace(/\D/g, '');
+
+        if (updateData.institutionType) {
+            updateData.institutionType = await this.getInstitutionType(updateData.institutionType);
+        }
+
+        if (updateData.cep || updateData.publicArea) {
+             const addressData = {
+                 cep: updateData.cep,
+                 street: updateData.publicArea,
+                 number: updateData.number,
+                 adjunct: updateData.complement,
+                 city_name: updateData.city,
+                 state_uf: updateData.state
+             };
+             try {
+                updateData.address = await this.processAddress(addressData);
+             } catch(e) {}
+             
+             delete updateData.cep;
+             delete updateData.publicArea;
+             delete updateData.number;
+             delete updateData.complement;
+             delete updateData.city;
+             delete updateData.state;
+        }
+
+        return await this.institutionRepository.update(id, updateData);
+    }
 }

@@ -1,14 +1,27 @@
 import nodemailer from 'nodemailer';
 
 export class EmailService {
-  private static transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
-    port: Number(process.env.SMTP_PORT) || 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
+  private static async sendMailWrapper(mailOptions: nodemailer.SendMailOptions) {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn("\n=======================================================");
+      console.warn("⚠️ E-mail simulado (SMTP_USER não configurado no .env):");
+      console.warn(`📩 Para: ${mailOptions.to}`);
+      console.warn(`📝 Assunto: ${mailOptions.subject}`);
+      console.warn("=======================================================\n");
+      return;
     }
-  });
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    await transporter.sendMail(mailOptions);
+  }
 
   private static getLogoUrl(): string {
     const port = process.env.SERVER_PORT || 8101;
@@ -66,14 +79,14 @@ export class EmailService {
         <p>Por questões de segurança, recomendamos que você faça login e altere esta senha imediatamente na área "Meu Perfil".</p>
       `;
 
-      await this.transporter.sendMail({
+      await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
         subject: "Recuperação de Senha - Meu Primeiro Alô",
         html: this.getTemplate("Recuperação de Senha", htmlContent)
       });
 
-      console.log(`Email de recuperação enviado para ${email}`);
+      console.log(`Email de recuperação processado para ${email}`);
       return true;
     } catch (error) {
       console.error("Erro ao enviar email:", error);
@@ -94,14 +107,14 @@ export class EmailService {
         </div>
       `;
 
-      await this.transporter.sendMail({
+      await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
         subject: "Bem-vindo ao Meu Primeiro Alô!",
         html: this.getTemplate("Bem-vindo!", htmlContent)
       });
 
-      console.log(`Email de boas-vindas enviado para ${name}`);
+      console.log(`Email de boas-vindas processado para ${name}`);
       return true;
     } catch (error) {
       console.error("Erro ao enviar email de boas-vindas:", error);
@@ -126,14 +139,14 @@ export class EmailService {
         </div>
       `;
 
-      await this.transporter.sendMail({
+      await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
         subject: "Sua conta foi criada - Meu Primeiro Alô",
         html: this.getTemplate("Conta Criada!", htmlContent)
       });
 
-      console.log(`Email de nova conta enviado para ${email}`);
+      console.log(`Email de nova conta processado para ${email}`);
       return true;
     } catch (error) {
       console.error("Erro ao enviar email de nova conta:", error);
@@ -162,14 +175,14 @@ export class EmailService {
         </div>
       `;
 
-      await this.transporter.sendMail({
+      await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
         subject: "Seu acesso foi criado - Meu Primeiro Alô",
         html: this.getTemplate("Acesso Criado!", htmlContent)
       });
 
-      console.log(`Email de acesso do responsável enviado para ${email}`);
+      console.log(`Email de acesso do responsável processado para ${email}`);
       return true;
     } catch (error) {
       console.error("Erro ao enviar email de acesso do responsável:", error);

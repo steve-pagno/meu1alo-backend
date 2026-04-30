@@ -15,6 +15,10 @@ export default class TriageService {
         return this.triageRepository.create(triage, transaction);
     }
 
+    public async update(id: number, triage: Triage, transaction?: EntityManager) {
+        return this.triageRepository.update(id, triage, transaction);
+    }
+
     public async triageTypes() {
         return Object.keys(TriageType).map((key) => (
             { id: key, name: TriageType[key as TriageString] }

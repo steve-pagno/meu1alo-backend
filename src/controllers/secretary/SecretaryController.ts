@@ -43,4 +43,24 @@ export default class SecretaryController {
         const result = await secretaryService.create(params);
         return { httpStatus: HttpStatus.CREATED, result };
     }
+
+    public async getMe(params: any) {
+        const secretaryService = new SecretaryService();
+        const secretaryId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        const result = await secretaryService.getById(secretaryId);
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async updateMe(params: any) {
+        const secretaryService = new SecretaryService();
+        const secretaryId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+
+        if (!params.password) {
+            delete params.password;
+            delete params.passwordConfirm;
+        }
+
+        const result = await secretaryService.update(secretaryId, params);
+        return { httpStatus: HttpStatus.OK, result };
+    }
 }

@@ -19,6 +19,7 @@ export class JwtAuth {
 
         try {
             const decoded = jwt.verify(String(token).replace('Bearer ', ''), JwtAuth.SECRET);
+            if (!req.body) req.body = {};
             req.body.jwtObject = decoded;
         } catch (err: any) {
             const message = err?.name === 'TokenExpiredError' ? 'Session Expired' : 'Invalid Token';

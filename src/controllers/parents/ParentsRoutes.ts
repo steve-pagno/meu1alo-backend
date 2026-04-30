@@ -13,6 +13,9 @@ export default class ParentsRoutes extends AbstractRoutes {
 
         this.getDashboard();
         this.getTriages();
+        this.getMe();
+        this.updateMe();
+        this.getByCpf();
     }
 
     private getDashboard(): void {
@@ -37,5 +40,40 @@ export default class ParentsRoutes extends AbstractRoutes {
         };
 
         this.addRoute<JwtUserInterface>(config, this.controller.getTriages);
+    }
+
+    private getMe(): void {
+        const config: RouteConfig = {
+            description: 'Recuperar dados da minha conta',
+            method: 'get',
+            params: new ValidatorRequest(),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.controller.getMe);
+    }
+
+    private updateMe(): void {
+        const config: RouteConfig = {
+            description: 'Atualizar dados da minha conta',
+            method: 'put',
+            params: new ValidatorRequest(),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.controller.updateMe);
+    }
+
+    private getByCpf(): void {
+        const config: RouteConfig = {
+            description: 'Recuperar dados públicos do responsável via CPF',
+            method: 'get',
+            params: new ValidatorRequest(undefined, undefined, new (require('../../helpers/validator/ValidatorObject').ValidatorObject)('params', [
+                new (require('../../helpers/validator/ValidatorString').ValidatorString)('cpf').required(true)
+            ])),
+            path: '/cpf/:cpf',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.controller.getByCpf);
     }
 }

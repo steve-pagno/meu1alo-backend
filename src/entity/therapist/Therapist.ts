@@ -18,9 +18,7 @@ export class Therapist extends User {
     })
     crfa: string;
 
-    @Column({ comment: 'Json do tempo de experiência', enum: TherapistXP, name: 'tempo_experiencia', type: 'enum',
-        update: false,
-    })
+    @Column({ comment: 'Json do tempo de experiência', enum: TherapistXP, name: 'tempo_experiencia', type: 'enum' })
     xp: TherapistXP;
 
     // Relacionamentos

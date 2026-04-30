@@ -10,6 +10,14 @@ export default class TriageRepository {
         return Triage.save(triage);
     }
 
+    public async update(id: number, triage: Triage, transaction?: EntityManager): Promise<Triage> {
+        const triageToSave = { ...triage, id } as Triage;
+        if(transaction) {
+            return transaction.getRepository(Triage).save(triageToSave);
+        }
+        return Triage.save(triageToSave);
+    }
+
     public async getAll(query: QueryTriageDTO): Promise<Triage[]> {
         let triageQuery = Triage.createQueryBuilder('triage')
             .select([
@@ -17,11 +25,16 @@ export default class TriageRepository {
                 'triage.leftEar AS leftEar', 'triage.rightEar AS rightEar',
                 'triage.evaluationDate AS evaluationDate', 'triage.type AS type',
                 'conduct.resultDescription AS conduct',
-                'institution.institutionName AS institution, conduct.testType AS testType'
+                'institution.institutionName AS institution',
+                'conduct.testType AS testType',
+                'baby.name AS babyName',
+                'birthMother.name AS responsibleName'
             ])
             .leftJoin('triage.conduct', 'conduct')
             .leftJoin('triage.institution', 'institution')
             .leftJoin('triage.therapist', 'therapist')
+            .leftJoin('triage.baby', 'baby')
+            .leftJoin('baby.birthMother', 'birthMother')
             .leftJoin('therapist.institutions', 'therapistInstitutions')
             .where('triage.institution = therapistInstitutions.id');
 
@@ -39,6 +52,14 @@ export default class TriageRepository {
 
         if(query.testType){
             triageQuery = triageQuery.andWhere('conduct.testType = :testType', { testType: query.testType });
+        }
+
+        if(query.babyName){
+            triageQuery = triageQuery.andWhere('baby.name LIKE :babyName', { babyName: `%${query.babyName}%` });
+        }
+
+        if(query.responsibleName){
+            triageQuery = triageQuery.andWhere('birthMother.name LIKE :responsibleName', { responsibleName: `%${query.responsibleName}%` });
         }
 
         return triageQuery.getRawMany();

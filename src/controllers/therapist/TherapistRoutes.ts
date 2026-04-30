@@ -30,6 +30,7 @@ export default class TherapistRoutes extends AbstractRoutes {
         this.getXpTypes();
         
         this.getMe(); 
+        this.updateMe();
         
         this.getEditableFields();
     }
@@ -67,6 +68,17 @@ export default class TherapistRoutes extends AbstractRoutes {
             withJWT: true // <--- Essencial para identificar o usuário via Token
         };
         this.addRoute<JwtUserInterface>(config, this.therapistController.getMe);
+    }
+
+    private updateMe(): void {
+        const config: RouteConfig = {
+            description: 'Endpoint para atualizar os dados do fonoaudiólogo logado',
+            method: 'put',
+            params: new ValidatorRequest(new ValidatorObject('body', [])),
+            path: '/me',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.therapistController.updateMe);
     }
 
     private getEditableFields(): void {

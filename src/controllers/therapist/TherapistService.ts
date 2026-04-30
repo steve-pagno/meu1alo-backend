@@ -3,6 +3,7 @@ import { NotFoundTherapistError, OnFindTherapistError } from './TherapistErrors'
 import TherapistRepository from './TherapistRepository';
 import { TherapistIdName, TherapistXP, TherapistXPString } from './TherapistTypes';
 import dataSource from "../../config/DataSource";
+import CryptoHelper from '../../helpers/CryptoHelper';
 
 export default class TherapistService {
     private therapistRepository: TherapistRepository;
@@ -65,4 +66,69 @@ export default class TherapistService {
         ));
     }
 
+    public async update(id: number, updateData: any) {
+        if (!updateData.password) {
+            delete updateData.password;
+        } else {
+            updateData.password = CryptoHelper.encrypt(updateData.password);
+        }
+
+        // emails/phones as string array
+        let emailsRecebidos = updateData.emails || [];
+        if (!Array.isArray(emailsRecebidos)) {
+            emailsRecebidos = Object.values(emailsRecebidos);
+        }
+
+        let phonesRecebidos = updateData.phones || [];
+        if (!Array.isArray(phonesRecebidos)) {
+            phonesRecebidos = Object.values(phonesRecebidos);
+        }
+
+        const emailStrings = emailsRecebidos
+            .map((e: any) => typeof e === 'string' ? e : e?.email)
+            .filter((e: any) => typeof e === 'string' && e.trim() !== '');
+
+        const phoneStrings = phonesRecebidos
+            .map((p: any) => typeof p === 'string' ? p : p?.phoneNumber)
+            .filter((p: any) => typeof p === 'string' && p.trim() !== '');
+
+        delete updateData.emails;
+        delete updateData.phones;
+        delete updateData.currentPassword;
+        
+        if (updateData.institutions) {
+            updateData.institutions = updateData.institutions.map((i: any) => ({ id: i }));
+        }
+        
+        if (updateData.xp) {
+            updateData.xp = TherapistXP[updateData.xp as unknown as TherapistXPString];
+        }
+
+        const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        const manager = queryRunner.manager;
+
+        try {
+            await this.therapistRepository.deleteEmails(id, manager);
+            await this.therapistRepository.deletePhones(id, manager);
+
+            const updatedTherapist = await this.therapistRepository.update(id, updateData, manager);
+
+            if (emailStrings.length > 0) {
+                await this.therapistRepository.saveEmails(id, emailStrings, manager);
+            }
+            if (phoneStrings.length > 0) {
+                await this.therapistRepository.savePhones(id, phoneStrings, manager);
+            }
+
+            await queryRunner.commitTransaction();
+            return updatedTherapist;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
 }

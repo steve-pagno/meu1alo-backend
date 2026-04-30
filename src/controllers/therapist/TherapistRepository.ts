@@ -70,4 +70,23 @@ export default class TherapistRepository {
             throw new DuplicatePhone(e.message);
         }
     }
+
+    public async deleteEmails(id: number, transaction: EntityManager): Promise<void> {
+        await transaction.getRepository(TherapistEmail).delete({ therapist: { id } });
+    }
+
+    public async deletePhones(id: number, transaction: EntityManager): Promise<void> {
+        await transaction.getRepository(TherapistPhone).delete({ therapist: { id } });
+    }
+
+    public async update(id: number, updateData: any, transaction: EntityManager): Promise<Therapist> {
+        const therapist = await this.getEditableFields(id);
+        if (!therapist) {
+            throw new Error('Therapist not found');
+        }
+        
+        // Merge over the retrieved entity
+        const updatedTherapist = transaction.getRepository(Therapist).merge(therapist, updateData);
+        return transaction.getRepository(Therapist).save(updatedTherapist);
+    }
 }
