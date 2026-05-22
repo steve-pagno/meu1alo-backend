@@ -1,10 +1,10 @@
-import { Guardian } from '../../entity/guardian/Guardian';
-import { AddressComponent } from '../../entity/decorators/components/Address';
-import CryptoHelper from '../../helpers/CryptoHelper';
-import GuardianRepository from './GuardianRepository';
-import dataSource from '../../config/DataSource';
 import { EntityManager } from 'typeorm/entity-manager/EntityManager';
+import dataSource from '../../config/DataSource';
+import { AddressComponent } from '../../entity/decorators/components/Address';
+import { Guardian } from '../../entity/guardian/Guardian';
+import CryptoHelper from '../../helpers/CryptoHelper';
 import CityRepository from '../secretary/city/CityRepository';
+import GuardianRepository from './GuardianRepository';
 
 export default class GuardianService {
     private guardianRepository: GuardianRepository;
@@ -20,14 +20,14 @@ export default class GuardianService {
     }
 
     private async processAddress(addressData: any, fullPayload?: any): Promise<AddressComponent> {
-        if (!addressData) return addressData;
+        if (!addressData) { return addressData; }
 
         const cityIdRaw = addressData?.city?.id ?? addressData?.city_id ?? addressData?.cityId;
         if (cityIdRaw !== undefined && cityIdRaw !== null && cityIdRaw !== '') {
             const cityId = Number(cityIdRaw);
             if (!Number.isNaN(cityId)) {
                 const cityEntity = await this.cityRepository.getById(cityId);
-                if (!cityEntity) throw new Error(`Município (id=${cityId}) não encontrado no banco de dados.`);
+                if (!cityEntity) { throw new Error(`Município (id=${cityId}) não encontrado no banco de dados.`); }
 
                 const address = new AddressComponent();
                 address.street = addressData.street || addressData.rua;
@@ -67,7 +67,7 @@ export default class GuardianService {
         }
 
         const guardian = await this.guardianRepository.findByCpf(normalizedCpf);
-        if (!guardian) return null;
+        if (!guardian) { return null; }
 
         const { Baby } = require('../../entity/baby/Baby');
         const babies = await dataSource.getRepository(Baby).createQueryBuilder('baby')
@@ -76,23 +76,31 @@ export default class GuardianService {
             .getMany();
 
         return {
-            id: guardian.id,
-            name: guardian.name,
-            cpf: guardian.cpf,
-            birthDate: guardian.birthDate,
-            emails: Array.isArray(guardian.emails) ? guardian.emails.map((e: any) => e.email) : [],
-            phones: Array.isArray(guardian.phones) ? guardian.phones.map((p: any) => p.phoneNumber) : [],
+            address: guardian.address ? {
+                adjunct: guardian.address.adjunct,
+                cep: guardian.address.cep,
+                city_name: guardian.address.city?.name || '',
+                number: guardian.address.number,
+                state_uf: guardian.address.city?.state?.uf || '',
+                street: guardian.address.street,
+            } : null,
             babies: babies.map((baby: any) => ({
+                birthDate: baby.birthDate,
+                childBirthType: baby.childBirthType,
+                circumference: baby.circumference,
+                gestationalAge: baby.gestationalAge,
+                height: baby.height,
                 id: baby.id,
+                maternalDeath: baby.maternalDeath,
                 name: baby.name,
                 weight: baby.weight,
-                height: baby.height,
-                circumference: baby.circumference,
-                birthDate: baby.birthDate,
-                gestationalAge: baby.gestationalAge,
-                childBirthType: baby.childBirthType,
-                maternalDeath: baby.maternalDeath,
             })),
+            birthDate: guardian.birthDate,
+            cpf: guardian.cpf,
+            emails: Array.isArray(guardian.emails) ? guardian.emails.map((e: any) => e.email) : [],
+            id: guardian.id,
+            name: guardian.name,
+            phones: Array.isArray(guardian.phones) ? guardian.phones.map((p: any) => p.phoneNumber) : [],
         };
     }
 
@@ -162,7 +170,7 @@ export default class GuardianService {
                 existingGuardian.address = processedAddress;
                 hasChanges = true;
             }
-            
+
             if (hasChanges && manager) {
                 existingGuardian = await this.guardianRepository.save(existingGuardian, manager);
             }
