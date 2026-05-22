@@ -9,8 +9,8 @@ import { Therapist } from '../therapist/Therapist';
 
 export type TriageString = 'EOET' | 'EOEP' | 'PEATEA' | 'EOET_PEATEA';
 export enum TriageType {
-    EOET = 'EOA transiente',
-    EOEP = 'EOA produto de distorção',
+    EOET = 'EOE transitente',
+    EOEP = 'EOE produto de distorção',
     PEATEA = 'PEATE automático',
     EOET_PEATEA = 'EOE transitente + PEATE automático',
 }

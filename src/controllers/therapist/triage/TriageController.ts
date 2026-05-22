@@ -92,7 +92,7 @@ export default class TriageController {
 
             const conductService = new ConductService();
             const conduct = await conductService.create({
-                resultDescription: flowResult.resultDescription,
+                resultDescription: triageJson.conductDescription || flowResult.resultDescription,
                 accompanyDescription: flowResult.accompanyDescription,
                 leftEar: flowResult.finalLeftEar,
                 rightEar: flowResult.finalRightEar,
@@ -255,7 +255,7 @@ export default class TriageController {
             const conductService = new ConductService();
             const conduct = await conductService.create({
                 id: existingTriage.conduct.id,
-                resultDescription: flowResult.resultDescription,
+                resultDescription: triageJson.conductDescription || flowResult.resultDescription,
                 accompanyDescription: flowResult.accompanyDescription,
                 leftEar: flowResult.finalLeftEar,
                 rightEar: flowResult.finalRightEar,

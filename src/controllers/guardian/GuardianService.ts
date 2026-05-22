@@ -69,6 +69,12 @@ export default class GuardianService {
         const guardian = await this.guardianRepository.findByCpf(normalizedCpf);
         if (!guardian) return null;
 
+        const { Baby } = require('../../entity/baby/Baby');
+        const babies = await dataSource.getRepository(Baby).createQueryBuilder('baby')
+            .leftJoin('baby.guardians', 'guardian')
+            .where('baby.birthMother = :guardianId OR guardian.id = :guardianId', { guardianId: guardian.id })
+            .getMany();
+
         return {
             id: guardian.id,
             name: guardian.name,
@@ -76,6 +82,17 @@ export default class GuardianService {
             birthDate: guardian.birthDate,
             emails: Array.isArray(guardian.emails) ? guardian.emails.map((e: any) => e.email) : [],
             phones: Array.isArray(guardian.phones) ? guardian.phones.map((p: any) => p.phoneNumber) : [],
+            babies: babies.map((baby: any) => ({
+                id: baby.id,
+                name: baby.name,
+                weight: baby.weight,
+                height: baby.height,
+                circumference: baby.circumference,
+                birthDate: baby.birthDate,
+                gestationalAge: baby.gestationalAge,
+                childBirthType: baby.childBirthType,
+                maternalDeath: baby.maternalDeath,
+            })),
         };
     }
 
@@ -118,19 +135,62 @@ export default class GuardianService {
         const anyGuardian = guardian as any;
         const normalizedCpf = this.normalizeCpf(anyGuardian?.cpf);
 
+        let existingGuardian: Guardian | null = null;
+
         if (anyGuardian?.id) {
-            const existingById = await this.guardianRepository.getById(anyGuardian.id, manager);
-            if (!existingById) {
+            existingGuardian = await this.guardianRepository.getById(anyGuardian.id, manager);
+            if (!existingGuardian) {
                 throw new Error('Responsável informado não foi encontrado.');
             }
-            return existingById;
+        } else if (normalizedCpf) {
+            existingGuardian = await this.guardianRepository.findByCpf(normalizedCpf, manager);
+        }
+
+        if (existingGuardian) {
+            // Update fields if they are provided
+            let hasChanges = false;
+            if (guardian.name && guardian.name !== existingGuardian.name) {
+                existingGuardian.name = guardian.name;
+                hasChanges = true;
+            }
+            if (guardian.birthDate && new Date(guardian.birthDate).getTime() !== new Date(existingGuardian.birthDate).getTime()) {
+                existingGuardian.birthDate = guardian.birthDate;
+                hasChanges = true;
+            }
+            if (anyGuardian.address) {
+                const processedAddress = await this.processAddress(anyGuardian.address, existingGuardian);
+                existingGuardian.address = processedAddress;
+                hasChanges = true;
+            }
+            
+            if (hasChanges && manager) {
+                existingGuardian = await this.guardianRepository.save(existingGuardian, manager);
+            }
+
+            if (guardian.emails && guardian.emails.length > 0 && manager) {
+                await this.guardianRepository.deleteEmails(existingGuardian.id, manager);
+                const emailStrings = (guardian.emails as any[])
+                    .map(e => typeof e === 'string' ? e : e?.email)
+                    .filter(e => typeof e === 'string' && e.trim() !== '');
+                if (emailStrings.length > 0) {
+                    existingGuardian.emails = await this.guardianRepository.saveEmails(existingGuardian.id, emailStrings, manager);
+                }
+            }
+
+            if (guardian.phones && guardian.phones.length > 0 && manager) {
+                await this.guardianRepository.deletePhones(existingGuardian.id, manager);
+                const phoneStrings = (guardian.phones as any[])
+                    .map(p => typeof p === 'string' ? p : p?.phoneNumber)
+                    .filter(p => typeof p === 'string' && p.trim() !== '');
+                if (phoneStrings.length > 0) {
+                    existingGuardian.phones = await this.guardianRepository.savePhones(existingGuardian.id, phoneStrings, manager);
+                }
+            }
+
+            return existingGuardian;
         }
 
         if (normalizedCpf) {
-            const existingByCpf = await this.guardianRepository.findByCpf(normalizedCpf, manager);
-            if (existingByCpf) {
-                return existingByCpf;
-            }
             guardian.cpf = normalizedCpf;
         }
 

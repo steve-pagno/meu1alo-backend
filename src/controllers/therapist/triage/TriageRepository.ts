@@ -35,11 +35,10 @@ export default class TriageRepository {
             .leftJoin('triage.therapist', 'therapist')
             .leftJoin('triage.baby', 'baby')
             .leftJoin('baby.birthMother', 'birthMother')
-            .leftJoin('therapist.institutions', 'therapistInstitutions')
-            .where('triage.institution = therapistInstitutions.id');
+            .where('therapist.id = :therapistId', { therapistId: query.jwtObject?.id });
 
         if(query.rightEar){
-            triageQuery = triageQuery.where('triage.rightEar = :rightEar', { rightEar: query.rightEar });
+            triageQuery = triageQuery.andWhere('triage.rightEar = :rightEar', { rightEar: query.rightEar });
         }
 
         if(query.leftEar){
@@ -62,6 +61,22 @@ export default class TriageRepository {
             triageQuery = triageQuery.andWhere('birthMother.name LIKE :responsibleName', { responsibleName: `%${query.responsibleName}%` });
         }
 
+        let institutionIds: number[] = [];
+        if (query.institutionIds) {
+            const raw = query.institutionIds as any;
+            if (Array.isArray(raw)) {
+                institutionIds = raw.map(id => Number(id)).filter(id => !isNaN(id));
+            } else if (typeof raw === 'string') {
+                institutionIds = raw.split(',').map(id => Number(id.trim())).filter(id => !isNaN(id));
+            } else if (!isNaN(Number(raw))) {
+                institutionIds = [Number(raw)];
+            }
+        }
+
+        if (institutionIds.length > 0) {
+            triageQuery = triageQuery.andWhere('institution.id IN (:...institutionIds)', { institutionIds });
+        }
+
         return triageQuery.getRawMany();
     }
 
@@ -70,9 +85,18 @@ export default class TriageRepository {
             relations: [
                 'baby',
                 'baby.birthMother',
+                'baby.birthMother.address',
+                'baby.birthMother.emails',
+                'baby.birthMother.phones',
+                'baby.guardians',
+                'baby.guardians.address',
+                'baby.guardians.emails',
+                'baby.guardians.phones',
                 'equipment',
                 'orientation',
-                'conduct'
+                'conduct',
+                'indicators',
+                'institution'
             ],
             where: {
                 id

@@ -19,6 +19,8 @@ export default class GuardianRepository {
                 .createQueryBuilder('guardian')
                 .leftJoinAndSelect('guardian.emails', 'emails')
                 .leftJoinAndSelect('guardian.phones', 'phones')
+                .leftJoinAndSelect('guardian.address.city', 'city')
+                .leftJoinAndSelect('city.state', 'state')
                 .where('guardian.id = :id', { id })
                 .getOne();
         }
@@ -26,6 +28,8 @@ export default class GuardianRepository {
         return Guardian.createQueryBuilder('guardian')
             .leftJoinAndSelect('guardian.emails', 'emails')
             .leftJoinAndSelect('guardian.phones', 'phones')
+            .leftJoinAndSelect('guardian.address.city', 'city')
+            .leftJoinAndSelect('city.state', 'state')
             .where('guardian.id = :id', { id })
             .getOne();
     }
@@ -36,6 +40,8 @@ export default class GuardianRepository {
                 .createQueryBuilder('guardian')
                 .leftJoinAndSelect('guardian.emails', 'emails')
                 .leftJoinAndSelect('guardian.phones', 'phones')
+                .leftJoinAndSelect('guardian.address.city', 'city')
+                .leftJoinAndSelect('city.state', 'state')
                 .where('guardian.cpf = :cpf', { cpf })
                 .getOne();
         }
@@ -43,6 +49,8 @@ export default class GuardianRepository {
         return Guardian.createQueryBuilder('guardian')
             .leftJoinAndSelect('guardian.emails', 'emails')
             .leftJoinAndSelect('guardian.phones', 'phones')
+            .leftJoinAndSelect('guardian.address.city', 'city')
+            .leftJoinAndSelect('city.state', 'state')
             .where('guardian.cpf = :cpf', { cpf })
             .getOne();
     }
@@ -87,5 +95,13 @@ export default class GuardianRepository {
         } catch (e: any) {
             throw new DuplicatePhone(e.message);
         }
+    }
+
+    public async deleteEmails(id: number, transaction: EntityManager): Promise<void> {
+        await transaction.getRepository(GuardianEmail).delete({ guardian: { id } });
+    }
+
+    public async deletePhones(id: number, transaction: EntityManager): Promise<void> {
+        await transaction.getRepository(GuardianPhone).delete({ guardian: { id } });
     }
 }

@@ -17,8 +17,17 @@ export default class ReportsService {
         return this.getBabiesPassFail(institutionsIDs);
     }
     public async getBabiesPassFailTherapist(userID: number) {
-        const institutionsIDs: number[] = await this.reportsRepository.getInstitutionsIDsOfTherapist(userID);
-        return this.getBabiesPassFail(institutionsIDs);
+        const failsPromise = this.reportsRepository.failBabiesByTherapist(userID);
+        const passPromise = this.reportsRepository.passBabiesByTherapist(userID);
+
+        const result = await Promise.all([failsPromise, passPromise]);
+
+        return {
+            description: '',
+            labels: ['Falhou', 'Passou'],
+            quantities: result,
+            title: 'Quantidade de bebes que passaram e falharam.'
+        };
     }
     private async getBabiesPassFail(institutionsIDs: number[]) {
         const failsPromise = this.reportsRepository.failBabiesByInstitutions(institutionsIDs);
@@ -55,8 +64,15 @@ export default class ReportsService {
         return this.getIndicatorsPercent(institutionsIDs);
     }
     public async getIndicatorsPercentTherapist(userID: number) {
-        const institutionsIDs: number[] = await this.reportsRepository.getInstitutionsIDsOfTherapist(userID);
-        return this.getIndicatorsPercent(institutionsIDs);
+        const indicators = await this.reportsRepository.getIndicatorsPercentByTherapist(userID);
+        const triagesTotal = await this.reportsRepository.getTriagesTotalByTherapist(userID);
+
+        return {
+            description: '',
+            labels: indicators.map(indicator => indicator.name),
+            quantities: indicators.map(indicator => triagesTotal > 0 ? indicator.total*100/triagesTotal : 0),
+            title: 'Porcentagem para cada indicador.'
+        };
     }
     private async getIndicatorsPercent(institutionsIDs: number[]) {
         const indicators = await this.reportsRepository.getIndicatorsPercentByInstitutions(institutionsIDs);
@@ -80,8 +96,16 @@ export default class ReportsService {
         return this.getIndicators(institutionsIDs);
     }
     public async getIndicatorsTherapist(userID: number) {
-        const institutionsIDs: number[] = await this.reportsRepository.getInstitutionsIDsOfTherapist(userID);
-        return this.getIndicators(institutionsIDs);
+        const result = await this.reportsRepository.getIndicatorsByTherapist(userID);
+
+        const { multiple, one, zero } = result || { multiple: 0, one: 0, zero: 0 };
+
+        return {
+            description: '(Relacionado a quantidade de indicadores selecionados no momento da consulta)',
+            labels: ['Nenhum', 'Único', 'Múltiplo'],
+            quantities: [Number(zero), Number(one), Number(multiple)],
+            title: 'Nenhum, Único ou múltiplos Indicadores.'
+        };
     }
     private async getIndicators(institutionsIDs: number[]) {
         const result = await this.reportsRepository.getIndicatorsByInstitutions(institutionsIDs);
@@ -106,8 +130,14 @@ export default class ReportsService {
         return this.getEquipment(institutionsIDs);
     }
     public async getEquipmentTherapist(userID: number) {
-        const institutionsIDs: number[] = await this.reportsRepository.getInstitutionsIDsOfTherapist(userID);
-        return this.getEquipment(institutionsIDs);
+        const equipments = await this.reportsRepository.getEquipmentByTherapist(userID);
+
+        return {
+            description: '(Para analise dos resultados comparando com os equipamentos)',
+            labels: equipments.map(equipment => equipment.model),
+            quantities: equipments.map(equipment => equipment.total),
+            title: 'Quantidade de bebes que falharam por equipamento'
+        };
     }
     private async getEquipment(institutionsIDs: number[]) {
         const equipments = await this.reportsRepository.getEquipmentByInstitutions(institutionsIDs);

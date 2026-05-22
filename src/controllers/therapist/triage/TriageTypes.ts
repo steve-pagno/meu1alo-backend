@@ -27,13 +27,15 @@ export interface TriageJwt extends JwtUserInterface {
     therapist?: Therapist;
     indicators?: Array<number | Indicator>;
     testType?: number;
+    conductDescription?: string;
 }
 
-export interface QueryTriageDTO {
+export interface QueryTriageDTO extends Partial<JwtUserInterface> {
     leftEar?: number;
     rightEar?: number;
     evaluationDate?: Date;
     testType?: number;
     babyName?: string;
     responsibleName?: string;
+    institutionIds?: number[];
 }

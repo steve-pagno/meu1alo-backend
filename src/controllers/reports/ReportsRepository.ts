@@ -132,4 +132,74 @@ export default class ReportsRepository {
             .getRawMany()
         ;
     }
+
+    public async passBabiesByTherapist(therapistId: number): Promise<number> {
+        return Triage
+            .createQueryBuilder('t')
+            .where('t.therapist = :therapistId', { therapistId })
+            .andWhere('t.leftEar = 1')
+            .andWhere('t.rightEar = 1')
+            .getCount()
+        ;
+    }
+
+    public async failBabiesByTherapist(therapistId: number): Promise<number> {
+        return Triage
+            .createQueryBuilder('t')
+            .where('t.therapist = :therapistId', { therapistId })
+            .andWhere('(t.leftEar = 0 OR t.rightEar = 0)')
+            .getCount()
+        ;
+    }
+
+    public async getIndicatorsPercentByTherapist(therapistId: number): Promise<{name: string, total: number}[]> {
+        return Indicator
+            .createQueryBuilder('i')
+            .select(['COUNT(t.id) AS total', 'i.name AS name'])
+            .leftJoin('i.triages', 't')
+            .where('t.therapist = :therapistId', { therapistId })
+            .orderBy('total', 'DESC')
+            .limit(20)
+            .groupBy('i.name')
+            .getRawMany()
+        ;
+    }
+
+    public async getTriagesTotalByTherapist(therapistId: number): Promise<number> {
+        return Triage
+            .createQueryBuilder('t')
+            .where('t.therapist = :therapistId', { therapistId })
+            .getCount()
+        ;
+    }
+
+    public async getIndicatorsByTherapist(therapistId: number): Promise<{zero: number, one: number, multiple: number} | undefined> {
+        const baseSubQuery = 'SELECT COUNT(`i`.`id_indicador_risco`) FROM `triagem_indicador` `t_i` LEFT JOIN `indicador_risco` `i` ON `i`.`id_indicador_risco` = `t_i`.`fk_indicador` ' +
+            'WHERE `t_i`.`fk_triagem` = t1.id_triagem'
+        ;
+        return Triage
+            .createQueryBuilder('t1')
+            .select([
+                `COUNT(IF((${baseSubQuery}) = 0, 1, NULL)) AS zero`,
+                `COUNT(IF((${baseSubQuery}) = 1, 1, NULL)) AS one`,
+                `COUNT(IF((${baseSubQuery}) > 1, 1, NULL)) AS multiple`
+            ])
+            .where('t1.therapist = :therapistId', { therapistId })
+            .getRawOne()
+        ;
+    }
+
+    public async getEquipmentByTherapist(therapistId: number): Promise<{model: string, total: number}[]> {
+        return Equipment
+            .createQueryBuilder('e')
+            .select(['COUNT(t.id) AS total', 'e.model AS model'])
+            .leftJoin('e.triages', 't')
+            .where('t.therapist = :therapistId', { therapistId })
+            .andWhere('(t.leftEar = 0 OR t.rightEar = 0)')
+            .orderBy('total', 'DESC')
+            .limit(20)
+            .groupBy('e.model')
+            .getRawMany()
+        ;
+    }
 }
