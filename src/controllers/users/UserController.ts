@@ -93,6 +93,8 @@ export default class UserController {
 
             // @ts-ignore (depende do tipo concreto)
             user.password = passwordHash;
+            // @ts-ignore
+            user.forcePasswordReset = true;
             await repo.save(user);
 
             const userName = (user as any)?.name || 'usuário';
@@ -110,5 +112,51 @@ export default class UserController {
                 result: { message: 'Erro interno ao processar solicitação.' },
             };
         }
+    }
+
+    public async resetPassword(
+        params: { password?: string; userType?: string; jwtObject?: { id: number } }
+    ) {
+        const { password, userType, jwtObject } = params;
+        const userId = jwtObject?.id;
+
+        if (!userId) {
+            return {
+                httpStatus: HttpStatus.UNAUTHORIZED,
+                result: { message: 'Não autorizado.' },
+            };
+        }
+
+        if (!password || !userType || !MappingUser[userType as UserString]) {
+            return {
+                httpStatus: HttpStatus.BAD_REQUEST,
+                result: { message: 'Dados inválidos.' },
+            };
+        }
+
+        const entityClass = MappingUser[userType as UserString];
+        const repo = dataSource.getRepository(entityClass);
+
+        const user = await repo.findOneBy({ id: userId } as any);
+        if (!user) {
+            return {
+                httpStatus: HttpStatus.NOT_FOUND,
+                result: { message: 'Usuário não encontrado.' },
+            };
+        }
+
+        const passwordHash = CryptoHelper.encrypt(password);
+
+        // @ts-ignore
+        user.password = passwordHash;
+        // @ts-ignore
+        user.forcePasswordReset = false;
+
+        await repo.save(user);
+
+        return {
+            httpStatus: HttpStatus.OK,
+            result: { message: 'Senha redefinida com sucesso!' },
+        };
     }
 }

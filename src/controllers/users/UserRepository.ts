@@ -23,6 +23,7 @@ export class UserRepository{
             .createQueryBuilder('u')
             .select('u.id','id')
             .addSelect('u.name','name')
+            .addSelect('u.forcePasswordReset','forcePasswordReset')
             .where('u.login = :login', { login: authObj.login })
             .andWhere('u.password = :password', { password: CryptoHelper.encrypt(authObj.password) })
         ;

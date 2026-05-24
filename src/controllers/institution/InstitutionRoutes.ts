@@ -19,6 +19,7 @@ export default class InstitutionRoutes extends AbstractRoutes {
         this.getDashboard();
         this.getInstitutionTypes();
         this.getAll();
+        this.getTriages();
         this.getOne();
     }
 
@@ -102,5 +103,16 @@ export default class InstitutionRoutes extends AbstractRoutes {
             withJWT: true
         };
         this.addRoute<any>(config, this.institutionController.updateMe);
+    }
+
+    private getTriages() {
+        const config: RouteConfig = {
+            description: 'Recuperar triagens da instituição logada',
+            method: 'get',
+            params: new ValidatorRequest(undefined, new ValidatorObject('query', []).withDescription('Query params').required(false)),
+            path: '/triage',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.getTriages);
     }
 }

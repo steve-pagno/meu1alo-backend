@@ -27,6 +27,28 @@ export default class TriageController {
         const manager = queryRunner.manager;
 
         try {
+            if (triageJson.baby) {
+                const babyId = triageJson.baby.id as any;
+                if (babyId === '' || babyId === null || babyId === undefined || Number.isNaN(Number(babyId)) || Number(babyId) <= 0) {
+                    delete (triageJson.baby as any).id;
+                } else {
+                    triageJson.baby.id = Number(babyId);
+                }
+
+                if (triageJson.baby.weight !== undefined && triageJson.baby.weight !== null) {
+                    triageJson.baby.weight = Number(triageJson.baby.weight);
+                }
+                if (triageJson.baby.height !== undefined && triageJson.baby.height !== null) {
+                    triageJson.baby.height = Number(triageJson.baby.height);
+                }
+                if (triageJson.baby.circumference !== undefined && triageJson.baby.circumference !== null) {
+                    triageJson.baby.circumference = Number(triageJson.baby.circumference);
+                }
+                if (triageJson.baby.gestationalAge !== undefined && triageJson.baby.gestationalAge !== null) {
+                    triageJson.baby.gestationalAge = Number(triageJson.baby.gestationalAge);
+                }
+            }
+
             triageJson.baby.birthMother = await guardianService.addGuardianToTransaction(
                 triageJson.baby.birthMother,
                 true,
@@ -201,6 +223,21 @@ export default class TriageController {
                     true,
                     manager
                 );
+            }
+
+            if (triageJson.baby) {
+                if (triageJson.baby.weight !== undefined && triageJson.baby.weight !== null) {
+                    triageJson.baby.weight = Number(triageJson.baby.weight);
+                }
+                if (triageJson.baby.height !== undefined && triageJson.baby.height !== null) {
+                    triageJson.baby.height = Number(triageJson.baby.height);
+                }
+                if (triageJson.baby.circumference !== undefined && triageJson.baby.circumference !== null) {
+                    triageJson.baby.circumference = Number(triageJson.baby.circumference);
+                }
+                if (triageJson.baby.gestationalAge !== undefined && triageJson.baby.gestationalAge !== null) {
+                    triageJson.baby.gestationalAge = Number(triageJson.baby.gestationalAge);
+                }
             }
 
             triageJson.baby = await babyService.create(triageJson.baby, true, manager);

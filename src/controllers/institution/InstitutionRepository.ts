@@ -77,9 +77,28 @@ export default class InstitutionRepository {
             throw new DuplicatePhone(e.message);
         }
     }
-    public async update(userId: number, updateData: any) {
+    public async deleteEmails(id: number, transaction?: EntityManager): Promise<void> {
+        if (transaction) {
+            await transaction.getRepository(InstitutionEmail).delete({ user: { id } });
+        } else {
+            await InstitutionEmail.delete({ user: { id } });
+        }
+    }
+
+    public async deletePhones(id: number, transaction?: EntityManager): Promise<void> {
+        if (transaction) {
+            await transaction.getRepository(InstitutionPhone).delete({ user: { id } });
+        } else {
+            await InstitutionPhone.delete({ user: { id } });
+        }
+    }
+
+    public async update(userId: number, updateData: any, transaction: EntityManager) {
+        const repo = transaction.getRepository(InstitutionUser);
+        const instRepo = transaction.getRepository(Institution);
+
         // Fetch the user to get its institution relation
-        const user = await InstitutionUser.findOne({
+        const user = await repo.findOne({
             where: { id: userId },
             relations: ['institution']
         });
@@ -87,13 +106,13 @@ export default class InstitutionRepository {
         if (!user) throw new Error('Usuário institucional não encontrado.');
 
         // Update User
-        InstitutionUser.merge(user, updateData);
-        await InstitutionUser.save(user);
+        repo.merge(user, updateData);
+        await repo.save(user);
 
         // Update Institution if there is institution related data
         if (user.institution) {
-            Institution.merge(user.institution, updateData);
-            await Institution.save(user.institution);
+            instRepo.merge(user.institution, updateData);
+            await instRepo.save(user.institution);
         }
 
         return user;

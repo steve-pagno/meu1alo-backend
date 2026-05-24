@@ -14,6 +14,7 @@ export default class UserRoutes extends AbstractRoutes {
 
         this.login();
         this.recoverPassword();
+        this.resetPassword();
     }
 
     private login(): void {
@@ -53,6 +54,27 @@ export default class UserRoutes extends AbstractRoutes {
         this.addRoute<{email: string, userType: string}>(
             config, 
             this.userController.recoverPassword.bind(this.userController)
+        );
+    }
+
+    private resetPassword(): void {
+        const config: RouteConfig = {
+            description: 'Resetar Senha Obrigatório',
+            method: 'post',
+            path: '/reset-password',
+            withAuthHeader: false,
+            withJWT: true,
+            params: new ValidatorRequest(
+                new ValidatorObject('body', [
+                    new ValidatorString('password').required(true),
+                    new ValidatorString('userType').required(true)
+                ]).required(true)
+            )
+        };
+
+        this.addRoute<any>(
+            config, 
+            this.userController.resetPassword.bind(this.userController)
         );
     }
 }

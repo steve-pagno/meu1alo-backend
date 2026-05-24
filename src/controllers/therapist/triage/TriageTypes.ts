@@ -37,5 +37,6 @@ export interface QueryTriageDTO extends Partial<JwtUserInterface> {
     testType?: number;
     babyName?: string;
     responsibleName?: string;
+    therapistName?: string;
     institutionIds?: number[];
 }

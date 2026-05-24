@@ -8,6 +8,7 @@ import InstitutionRepository from './InstitutionRepository';
 import { InstitutionPayload, InstitutionString, InstitutionType } from './InstitutionTypes';
 import CityRepository from '../secretary/city/CityRepository';
 import { AddressComponent } from '../../entity/decorators/components/Address';
+import dataSource from '../../config/DataSource';
 
 export default class InstitutionService {
     private institutionRepository: InstitutionRepository;
@@ -90,15 +91,15 @@ export default class InstitutionService {
         catch (e: any) { throw new InstitutionTypeError(e.message); }
     }
 
-    public async findOneById(id: number) { return this.institutionRepository.findOne({ id }); }
+    public async findOneById(id: number) { return this.institutionRepository.findOne({ where: { id } }); }
     
     public async findUserById(userId: number) {
         return InstitutionUser.createQueryBuilder('u')
             .leftJoinAndSelect('u.institution', 'institution')
             .leftJoinAndSelect('u.emails', 'emails')
             .leftJoinAndSelect('u.phones', 'phones')
-            .leftJoinAndSelect('institution.address', 'address')
-            .leftJoinAndSelect('address.city', 'city')
+            .leftJoinAndSelect('institution.address.city', 'city')
+            .leftJoinAndSelect('city.state', 'state')
             .where('u.id = :id', { id: userId })
             .getOne();
     }
@@ -115,21 +116,43 @@ export default class InstitutionService {
         if (updateData.password) {
             const CryptoHelper = require('../../helpers/CryptoHelper').default;
             updateData.password = CryptoHelper.encrypt(updateData.password);
+        } else {
+            delete updateData.password;
         }
         delete updateData.passwordConfirm;
         delete updateData.jwtObject;
 
-        // Tratar array de emails e telefones
-        if (updateData.emails && typeof updateData.emails === 'object') {
-            const rawEmails = Array.isArray(updateData.emails) ? updateData.emails : Object.values(updateData.emails);
-            await this.saveEmails(id, rawEmails.filter((e: any) => e) as string[]);
-            delete updateData.emails;
+        // Map responsible fields to user entity fields
+        if (updateData.responsibleName !== undefined) {
+            updateData.name = updateData.responsibleName;
+            delete updateData.responsibleName;
+        }
+        if (updateData.responsibleRole !== undefined) {
+            updateData.role = updateData.responsibleRole;
+            delete updateData.responsibleRole;
         }
 
-        if (updateData.phones && typeof updateData.phones === 'object') {
+        // Map emails and phones from frontend to strings arrays
+        let emailStrings: string[] = [];
+        if (updateData.emails) {
+            const rawEmails = Array.isArray(updateData.emails) ? updateData.emails : Object.values(updateData.emails);
+            emailStrings = rawEmails.filter((e: any) => e).map((e: any) => typeof e === 'string' ? e : e?.email);
+            delete updateData.emails;
+        } else if (updateData.email || updateData.alternativeEmail) {
+            emailStrings = [updateData.email, updateData.alternativeEmail].filter((e): e is string => typeof e === 'string' && e.trim() !== '');
+            delete updateData.email;
+            delete updateData.alternativeEmail;
+        }
+
+        let phoneStrings: string[] = [];
+        if (updateData.phones) {
             const rawPhones = Array.isArray(updateData.phones) ? updateData.phones : Object.values(updateData.phones);
-            await this.savePhones(id, rawPhones.filter((e: any) => e) as string[]);
+            phoneStrings = rawPhones.filter((p: any) => p).map((p: any) => typeof p === 'string' ? p : p?.phoneNumber);
             delete updateData.phones;
+        } else if (updateData.institutionPhone || updateData.institutionCellphone) {
+            phoneStrings = [updateData.institutionPhone, updateData.institutionCellphone].filter((p): p is string => typeof p === 'string' && p.trim() !== '');
+            delete updateData.institutionPhone;
+            delete updateData.institutionCellphone;
         }
 
         // Tentar formatar CNES e CNPJ e Type e Address se vieram
@@ -161,6 +184,45 @@ export default class InstitutionService {
              delete updateData.state;
         }
 
-        return await this.institutionRepository.update(id, updateData);
+        const queryRunner = dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        const manager = queryRunner.manager;
+
+        try {
+            // Delete old emails and phones
+            await this.institutionRepository.deleteEmails(id, manager);
+            await this.institutionRepository.deletePhones(id, manager);
+
+            // Update InstitutionUser and Institution
+            const updatedUser = await this.institutionRepository.update(id, updateData, manager);
+
+            // Save new emails and phones
+            if (emailStrings.length > 0) {
+                await this.institutionRepository.saveEmails(id, emailStrings, manager);
+            }
+            if (phoneStrings.length > 0) {
+                await this.institutionRepository.savePhones(id, phoneStrings, manager);
+            }
+
+            await queryRunner.commitTransaction();
+            return updatedUser;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    public async getTriages(userId: number, query: any) {
+        const ReportsRepository = require('../reports/ReportsRepository').default;
+        const reportsRepository = new ReportsRepository();
+        const institutionId = await reportsRepository.getInstitutionsIDsOfInstitutionUser(userId);
+
+        const TriageRepository = require('../therapist/triage/TriageRepository').default;
+        const triageRepository = new TriageRepository();
+
+        return triageRepository.getAllByInstitution(institutionId, query);
     }
 }

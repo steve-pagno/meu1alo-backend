@@ -19,7 +19,7 @@ export default class GuardianService {
         return String(cpf || '').replace(/\D/g, '');
     }
 
-    private async processAddress(addressData: any, fullPayload?: any): Promise<AddressComponent> {
+    private async processAddress(addressData: any, fullPayload?: any, existingCity?: any): Promise<AddressComponent> {
         if (!addressData) { return addressData; }
 
         const cityIdRaw = addressData?.city?.id ?? addressData?.city_id ?? addressData?.cityId;
@@ -43,6 +43,15 @@ export default class GuardianService {
         const stateUf = addressData.state_uf || fullPayload?.state_uf;
 
         if (!cityName || !stateUf) {
+            if (existingCity) {
+                const address = new AddressComponent();
+                address.street = addressData.street || addressData.rua;
+                address.number = addressData.number || addressData.numero;
+                address.adjunct = addressData.adjunct || addressData.complemento;
+                address.cep = (addressData.cep || '').replace(/\D/g, '');
+                address.city = existingCity;
+                return address;
+            }
             throw new Error('Dados de localização incompletos: cidade ou UF não informados.');
         }
 
@@ -143,6 +152,15 @@ export default class GuardianService {
         const anyGuardian = guardian as any;
         const normalizedCpf = this.normalizeCpf(anyGuardian?.cpf);
 
+        const guardianId = anyGuardian?.id as any;
+        if (guardianId === '' || guardianId === null || guardianId === undefined || Number.isNaN(Number(guardianId)) || Number(guardianId) <= 0) {
+            if (anyGuardian && 'id' in anyGuardian) {
+                delete anyGuardian.id;
+            }
+        } else {
+            anyGuardian.id = Number(guardianId);
+        }
+
         let existingGuardian: Guardian | null = null;
 
         if (anyGuardian?.id) {
@@ -166,7 +184,7 @@ export default class GuardianService {
                 hasChanges = true;
             }
             if (anyGuardian.address) {
-                const processedAddress = await this.processAddress(anyGuardian.address, existingGuardian);
+                const processedAddress = await this.processAddress(anyGuardian.address, existingGuardian, existingGuardian.address?.city);
                 existingGuardian.address = processedAddress;
                 hasChanges = true;
             }

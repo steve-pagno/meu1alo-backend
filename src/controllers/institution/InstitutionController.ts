@@ -111,4 +111,14 @@ export default class InstitutionController {
         const result = await institutionService.update(institutionId, params);
         return { httpStatus: HttpStatus.OK, result };
     }
+
+    public async getTriages(params: any) {
+        console.log("=== GET TRIAGES PARAMS ===", JSON.stringify(params));
+        const institutionService = new InstitutionService();
+        const userId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        console.log("=== GET TRIAGES USERID ===", userId);
+        const result = await institutionService.getTriages(userId, params);
+        console.log("=== GET TRIAGES RESULT COUNT ===", result ? result.length : 'null');
+        return { httpStatus: HttpStatus.OK, result };
+    }
 }

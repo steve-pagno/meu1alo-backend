@@ -37,11 +37,11 @@ export default class TriageRepository {
             .leftJoin('baby.birthMother', 'birthMother')
             .where('therapist.id = :therapistId', { therapistId: query.jwtObject?.id });
 
-        if(query.rightEar){
+        if(query.rightEar && String(query.rightEar) !== '4'){
             triageQuery = triageQuery.andWhere('triage.rightEar = :rightEar', { rightEar: query.rightEar });
         }
 
-        if(query.leftEar){
+        if(query.leftEar && String(query.leftEar) !== '4'){
             triageQuery = triageQuery.andWhere('triage.leftEar = :leftEar', { leftEar: query.leftEar });
         }
 
@@ -49,7 +49,7 @@ export default class TriageRepository {
             triageQuery = triageQuery.andWhere('triage.evaluationDate like :evaluationDate', { evaluationDate: `%${query.evaluationDate}%` });
         }
 
-        if(query.testType){
+        if(query.testType && String(query.testType) !== '4'){
             triageQuery = triageQuery.andWhere('conduct.testType = :testType', { testType: query.testType });
         }
 
@@ -59,6 +59,10 @@ export default class TriageRepository {
 
         if(query.responsibleName){
             triageQuery = triageQuery.andWhere('birthMother.name LIKE :responsibleName', { responsibleName: `%${query.responsibleName}%` });
+        }
+
+        if(query.therapistName){
+            triageQuery = triageQuery.andWhere('therapist.name LIKE :therapistName', { therapistName: `%${query.therapistName}%` });
         }
 
         let institutionIds: number[] = [];
@@ -80,23 +84,77 @@ export default class TriageRepository {
         return triageQuery.getRawMany();
     }
 
+    public async getAllByInstitution(institutionId: number, query: QueryTriageDTO): Promise<Triage[]> {
+        let triageQuery = Triage.createQueryBuilder('triage')
+            .select([
+                'triage.id AS id',
+                'triage.leftEar AS leftEar', 'triage.rightEar AS rightEar',
+                'triage.evaluationDate AS evaluationDate', 'triage.type AS type',
+                'conduct.resultDescription AS conduct',
+                'institution.institutionName AS institution',
+                'conduct.testType AS testType',
+                'baby.name AS babyName',
+                'birthMother.name AS responsibleName',
+                'therapist.name AS therapistName'
+            ])
+            .leftJoin('triage.conduct', 'conduct')
+            .leftJoin('triage.institution', 'institution')
+            .leftJoin('triage.therapist', 'therapist')
+            .leftJoin('triage.baby', 'baby')
+            .leftJoin('baby.birthMother', 'birthMother')
+            .where('institution.id = :institutionId', { institutionId });
+
+        if(query.rightEar && String(query.rightEar) !== '4'){
+            triageQuery = triageQuery.andWhere('triage.rightEar = :rightEar', { rightEar: query.rightEar });
+        }
+
+        if(query.leftEar && String(query.leftEar) !== '4'){
+            triageQuery = triageQuery.andWhere('triage.leftEar = :leftEar', { leftEar: query.leftEar });
+        }
+
+        if(query.evaluationDate){
+            triageQuery = triageQuery.andWhere('triage.evaluationDate like :evaluationDate', { evaluationDate: `%${query.evaluationDate}%` });
+        }
+
+        if(query.testType && String(query.testType) !== '4'){
+            triageQuery = triageQuery.andWhere('conduct.testType = :testType', { testType: query.testType });
+        }
+
+        if(query.babyName){
+            triageQuery = triageQuery.andWhere('baby.name LIKE :babyName', { babyName: `%${query.babyName}%` });
+        }
+
+        if(query.responsibleName){
+            triageQuery = triageQuery.andWhere('birthMother.name LIKE :responsibleName', { responsibleName: `%${query.responsibleName}%` });
+        }
+
+        if(query.therapistName){
+            triageQuery = triageQuery.andWhere('therapist.name LIKE :therapistName', { therapistName: `%${query.therapistName}%` });
+        }
+
+        return triageQuery.getRawMany();
+    }
+
     public async findById(id: number): Promise<Triage | null> {
         return Triage.findOne({
             relations: [
                 'baby',
                 'baby.birthMother',
-                'baby.birthMother.address',
+                'baby.birthMother.address.city',
+                'baby.birthMother.address.city.state',
                 'baby.birthMother.emails',
                 'baby.birthMother.phones',
                 'baby.guardians',
-                'baby.guardians.address',
+                'baby.guardians.address.city',
+                'baby.guardians.address.city.state',
                 'baby.guardians.emails',
                 'baby.guardians.phones',
                 'equipment',
                 'orientation',
                 'conduct',
                 'indicators',
-                'institution'
+                'institution',
+                'therapist'
             ],
             where: {
                 id
