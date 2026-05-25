@@ -47,6 +47,7 @@ export default class TriageController {
                 if (triageJson.baby.gestationalAge !== undefined && triageJson.baby.gestationalAge !== null) {
                     triageJson.baby.gestationalAge = Number(triageJson.baby.gestationalAge);
                 }
+                triageJson.baby.maternalDeath = !!triageJson.baby.maternalDeath;
             }
 
             triageJson.baby.birthMother = await guardianService.addGuardianToTransaction(

@@ -7,7 +7,7 @@ class Build {
         const abPath = './build';
 
         if (fs.existsSync(abPath)) {
-            fs.rmdirSync(abPath, { recursive: true });
+            fs.rmSync(abPath, { recursive: true, force: true });
         }
 
         return this;

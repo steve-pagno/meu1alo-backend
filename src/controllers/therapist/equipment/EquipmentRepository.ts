@@ -5,6 +5,11 @@ export default class EquipmentRepository {
         return Equipment.save(equipment);
     }
 
+    public async update(id: number, equipment: Equipment): Promise<Equipment> {
+        const equipmentToSave = { ...equipment, id } as Equipment;
+        return Equipment.save(equipmentToSave);
+    }
+
     public async deleteOne(equipment: Equipment): Promise<Equipment> {
         equipment.dateOfDeactivation = new Date();
         return equipment.save();
@@ -14,8 +19,9 @@ export default class EquipmentRepository {
         return Equipment.findOne({ where: { id: idEquipment } });
     }
 
-    public getAll(model?: string, brand?: string, dateOfLastCalibration?: string, listAllActives?: boolean): Promise<Equipment[] | undefined>{
+    public getAll(therapistId: number, model?: string, brand?: string, dateOfLastCalibration?: string, listAllActives?: boolean): Promise<Equipment[] | undefined>{
         const query = Equipment.createQueryBuilder('equipment')
+            .leftJoin('equipment.therapist', 'therapist')
             .select([
                 'equipment.id AS id',
                 'equipment.model AS name',
@@ -23,7 +29,9 @@ export default class EquipmentRepository {
                 'equipment.brand AS brand',
                 'equipment.dateOfLastCalibration AS dateOfLastCalibration',
                 'equipment.dateOfDeactivation AS dateOfDeactivation'
-            ]).orderBy('name','ASC');
+            ])
+            .where('therapist.id = :therapistId', { therapistId })
+            .orderBy('name','ASC');
 
         if(model){
             query.andWhere('equipment.model like :model', { model: `%${model}%` });

@@ -28,14 +28,17 @@ export default class TriageRepository {
                 'institution.institutionName AS institution',
                 'conduct.testType AS testType',
                 'baby.name AS babyName',
-                'birthMother.name AS responsibleName'
+                'birthMother.name AS responsibleName',
+                'GROUP_CONCAT(indicators.name SEPARATOR ", ") AS irda'
             ])
             .leftJoin('triage.conduct', 'conduct')
             .leftJoin('triage.institution', 'institution')
             .leftJoin('triage.therapist', 'therapist')
             .leftJoin('triage.baby', 'baby')
             .leftJoin('baby.birthMother', 'birthMother')
-            .where('therapist.id = :therapistId', { therapistId: query.jwtObject?.id });
+            .leftJoin('triage.indicators', 'indicators')
+            .where('therapist.id = :therapistId', { therapistId: query.jwtObject?.id })
+            .groupBy('triage.id');
 
         if(query.rightEar && String(query.rightEar) !== '4'){
             triageQuery = triageQuery.andWhere('triage.rightEar = :rightEar', { rightEar: query.rightEar });
@@ -95,14 +98,17 @@ export default class TriageRepository {
                 'conduct.testType AS testType',
                 'baby.name AS babyName',
                 'birthMother.name AS responsibleName',
-                'therapist.name AS therapistName'
+                'therapist.name AS therapistName',
+                'GROUP_CONCAT(indicators.name SEPARATOR ", ") AS irda'
             ])
             .leftJoin('triage.conduct', 'conduct')
             .leftJoin('triage.institution', 'institution')
             .leftJoin('triage.therapist', 'therapist')
             .leftJoin('triage.baby', 'baby')
             .leftJoin('baby.birthMother', 'birthMother')
-            .where('institution.id = :institutionId', { institutionId });
+            .leftJoin('triage.indicators', 'indicators')
+            .where('institution.id = :institutionId', { institutionId })
+            .groupBy('triage.id');
 
         if(query.rightEar && String(query.rightEar) !== '4'){
             triageQuery = triageQuery.andWhere('triage.rightEar = :rightEar', { rightEar: query.rightEar });

@@ -8,7 +8,7 @@ import { ValidatorObject } from '../../../helpers/validator/ValidatorObject';
 import { ValidatorRequest } from '../../../helpers/validator/ValidatorRequest';
 import { ValidatorString } from '../../../helpers/validator/ValidatorString';
 import EquipmentController from './EquipmentController';
-import { QueryEquipmentDTO } from './EquipmentTypes';
+import { EquipmentJwt, QueryEquipmentDTO } from './EquipmentTypes';
 
 export default class EquipmentRoutes extends AbstractRoutes {
     private equipmentController: EquipmentController;
@@ -20,6 +20,7 @@ export default class EquipmentRoutes extends AbstractRoutes {
         this.create();
         this.deleteOne();
         this.getAll();
+        this.update();
     }
 
     private create(): void {
@@ -34,7 +35,7 @@ export default class EquipmentRoutes extends AbstractRoutes {
             path: '/',
             withJWT: true
         };
-        this.addRoute<Equipment>(config, this.equipmentController.create);
+        this.addRoute<EquipmentJwt>(config, this.equipmentController.create);
     }
 
     public getAll(): void {
@@ -64,6 +65,23 @@ export default class EquipmentRoutes extends AbstractRoutes {
             withJWT: true
         };
         this.addRoute<{id: number}>(config, this.equipmentController.deleteOne);
+    }
+
+    private update(): void {
+        const config: RouteConfig = {
+            description: 'Endpoint para atualizar um equipamento',
+            method: 'put',
+            params: new ValidatorRequest(new ValidatorObject('body', [
+                new ValidatorString('brand').withDescription('marca').required(true),
+                new ValidatorDate('dateOfLastCalibration').withDescription('data da ultima calibração').required(true),
+                new ValidatorString('model').withDescription('modelo').required(true),
+            ]).withDescription('Equipment').required(true), undefined, new ValidatorObject('params', [
+                new ValidatorNumber('id').min(1).required(true).withExample(1)
+            ])),
+            path: '/:id',
+            withJWT: true
+        };
+        this.addRoute<EquipmentJwt>(config, this.equipmentController.update);
     }
 
 }

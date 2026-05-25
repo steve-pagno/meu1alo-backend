@@ -14,6 +14,14 @@ export default class EquipmentService{
         return this.equipmentRepository.create(equipment);
     }
 
+    public async update(id: number, equipment: Equipment): Promise<Equipment> {
+        const existingEquipment = await this.equipmentRepository.getOne(id);
+        if(!existingEquipment) {
+            throw new NotFoundEquipmentError(id.toString());
+        }
+        return this.equipmentRepository.update(id, equipment);
+    }
+
     public async deleteOne(idEquipment: number): Promise<Equipment> {
         const equipment = await this.equipmentRepository.getOne(idEquipment);
         if(!equipment) {
@@ -23,7 +31,7 @@ export default class EquipmentService{
     }
 
     public async getAll(query: QueryEquipmentDTO): Promise<Equipment[] | undefined>{
-        return this.equipmentRepository.getAll(query.model, query.brand, query.dateOfLastCalibration, query.listAllActives);
+        return this.equipmentRepository.getAll(query.jwtObject.id, query.model, query.brand, query.dateOfLastCalibration, query.listAllActives);
     }
 
 }
