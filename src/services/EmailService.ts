@@ -82,6 +82,7 @@ export class EmailService {
       await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
+        replyTo: 'suporte@meuprimeiroalo.com.br',
         subject: "Recuperação de Senha - Meu Primeiro Alô",
         html: this.getTemplate("Recuperação de Senha", htmlContent)
       });
@@ -110,6 +111,7 @@ export class EmailService {
       await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
+        replyTo: 'suporte@meuprimeiroalo.com.br',
         subject: "Bem-vindo ao Meu Primeiro Alô!",
         html: this.getTemplate("Bem-vindo!", htmlContent)
       });
@@ -142,6 +144,7 @@ export class EmailService {
       await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
+        replyTo: 'suporte@meuprimeiroalo.com.br',
         subject: "Sua conta foi criada - Meu Primeiro Alô",
         html: this.getTemplate("Conta Criada!", htmlContent)
       });
@@ -178,6 +181,7 @@ export class EmailService {
       await this.sendMailWrapper({
         from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
         to: email,
+        replyTo: 'suporte@meuprimeiroalo.com.br',
         subject: "Seu acesso foi criado - Meu Primeiro Alô",
         html: this.getTemplate("Acesso Criado!", htmlContent)
       });
@@ -186,6 +190,35 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error("Erro ao enviar email de acesso do responsável:", error);
+      return false;
+    }
+  }
+
+  static async sendTherapistInstitutionAssociationEmail(email: string, therapistName: string, institutionName: string) {
+    try {
+      const htmlContent = `
+        <h2 style="color: #5D307A; margin-top: 0;">Olá, ${therapistName}! 🎉</h2>
+        <p>Você foi vinculado(a) à instituição <b>${institutionName}</b> no sistema <b>Meu Primeiro Alô</b>.</p>
+        <p>A partir de agora, você poderá realizar atendimentos e triagens vinculadas a esta instituição.</p>
+        <div style="text-align: center; margin: 40px 0;">
+          <a href="https://meuprimeiroalo.com.br" style="background-color: #4CAF50; color: white; padding: 14px 28px; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 16px;">
+            Acessar Minha Conta
+          </a>
+        </div>
+      `;
+
+      await this.sendMailWrapper({
+        from: '"Meu Primeiro Alô" <noreply@meuprimeiroalo.com.br>',
+        to: email,
+        replyTo: 'suporte@meuprimeiroalo.com.br',
+        subject: `Vínculo com a instituição ${institutionName} - Meu Primeiro Alô`,
+        html: this.getTemplate("Vinculado a uma Instituição!", htmlContent)
+      });
+
+      console.log(`Email de associação de fonoaudiólogo processado para ${email}`);
+      return true;
+    } catch (error) {
+      console.error("Erro ao enviar email de associação de fonoaudiólogo:", error);
       return false;
     }
   }

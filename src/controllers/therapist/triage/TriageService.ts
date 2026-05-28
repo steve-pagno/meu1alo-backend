@@ -29,11 +29,18 @@ export default class TriageService {
         return this.triageRepository.getAll(params);
     }
 
-    public async findById(id: number) {
+    public async findById(id: number, therapistId?: number) {
         const triage = await this.triageRepository.findById(id);
 
         if(!triage) {
             throw new NotFoundOneTriageError();
+        }
+
+        if (therapistId && triage.institution) {
+            const isAssociated = await this.triageRepository.isTherapistAssociatedWithInstitution(therapistId, triage.institution.id);
+            if (!isAssociated) {
+                throw new Error('Acesso negado: você não faz mais parte da instituição desta triagem.');
+            }
         }
 
         return triage;

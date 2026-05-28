@@ -27,7 +27,7 @@ export default class UserController {
 
         const user: User = await userService.findOne(params.userType, authObj);
 
-        const token = new JwtAuth().createJWToken({ id: user.id });
+        const token = new JwtAuth().createJWToken({ id: user.id, userType: params.userType });
         const result = { token, user: user };
 
         return { httpStatus: HttpStatus.OK, result };

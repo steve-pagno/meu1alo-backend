@@ -97,7 +97,7 @@ export default class TherapistService {
         delete updateData.currentPassword;
         
         if (updateData.institutions) {
-            updateData.institutions = updateData.institutions.map((i: any) => ({ id: i }));
+            updateData.institutions = updateData.institutions.map((i: any) => ({ id: Number(i) }));
         }
         
         if (updateData.xp) {

@@ -1,158 +1,289 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title></title>
+    <title>Série Histórica de Teste e Reteste</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        .new-line {
-            margin-top: 10px
+        * {
+            box-sizing: border-box;
         }
-        .spacing {
-            display: flex;
-            justify-content: space-between;
+        body {
+            margin: 40px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 13px;
+            color: #333333;
+            background-color: #ffffff;
+            line-height: 1.6;
         }
-        .tr-pair {
-            background-color: #bfbfbf;
-        }
-        .tb-item {
-            border-bottom: none;
+        .header {
             text-align: center;
+            border-bottom: 3px solid #5D2A68;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
         }
-
+        .logo-placeholder {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #5D2A68;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666666;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #333333;
+            text-align: center;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section {
+            background-color: #fcfbfe;
+            border: 1px solid #e1d8e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #5D2A68;
+            margin-top: 0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 4px solid #5D2A68;
+            padding-left: 8px;
+        }
+        .grid {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .row {
+            display: table-row;
+        }
+        .col {
+            display: table-cell;
+            padding: 6px 10px;
+            vertical-align: top;
+        }
+        .label {
+            font-weight: 700;
+            color: #555555;
+        }
+        .value {
+            color: #111111;
+        }
+        .chart-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        .text-block {
+            background-color: #f7f9f9;
+            border-left: 4px solid #5D2A68;
+            padding: 10px 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
         table {
             border-collapse: collapse;
-            text-align: left;
             width: 100%;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            page-break-inside: avoid;
         }
-        td, th, .tb-item {
-            border: 1px solid black;
-            padding: 2px 10px;
-            min-width: 90px;
+        th {
+            background-color: #5D2A68;
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            padding: 8px 10px;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        td {
+            border: 1px solid #e1d8e6;
+            padding: 7px 10px;
+        }
+        tr:nth-child(even) {
+            background-color: #fbf9fc;
+        }
+        .table-title {
+            background-color: #e1d8e6;
+            color: #5D2A68;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
         }
     </style>
 </head>
-<body style="margin: 50px; font-family: arial, sans-serif; font-size: 16px">
-    <h3 style="display: flex; justify-content: center">
-        Relatório de exames - Série Histórica de Teste e Reteste
-    </h3>
-    <div style="margin-top: 40px;" class="spacing">
-        <span><b>Nome: </b>{{baby.name}}</span>
-        <span style="width: 124px;"><b>DN.: </b>{{baby.date}}</span>
+<body>
+    <div class="header">
+        <div class="logo-placeholder">Meu 1 Alô</div>
+        <div class="subtitle">Programa de Triagem Auditiva Neonatal</div>
     </div>
-    <div class="new-line">
-        <b>Sexo: </b> (&emsp;) Feminino &emsp; (&emsp;) Masculino &emsp;&emsp;
-        <b>Idade: </b>_____ anos _____ meses
+
+    <div class="title">Série Histórica de Acompanhamento (Teste / Reteste)</div>
+
+    <!-- Identificação -->
+    <div class="section">
+        <div class="section-title">Identificação</div>
+        <div class="grid">
+            <div class="row">
+                <div class="col" style="width: 60%;">
+                    <span class="label">Nome da Criança:</span> 
+                    <span class="value">{{baby.name}}</span>
+                </div>
+                <div class="col" style="width: 40%;">
+                    <span class="label">Data de Nasc.:</span> 
+                    <span class="value">{{baby.date}}</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span class="label">Mãe:</span> 
+                    <span class="value">{{mother.name}}</span>
+                </div>
+                <div class="col">
+                    <span class="label">Idade da Mãe:</span> 
+                    <span class="value">{{mother.age}} anos</span>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="new-line spacing">
-        <span><b>Mãe: </b> {{mother.name}}</span>
-        <span style="width: 138px;"><b>Idade: </b> {{mother.age}}</span>
-    </div>
-    <div class="new-line">
-        <b>Pai: </b>__________________________________________________________ <b>Idade: </b> _________
-    </div>
-    <br/>
-    <div class="new-line" style="display: flex; justify-content: center">
-        <canvas id="canvas1" width="400" height="250" style="border:1px solid #000000;"></canvas>
+
+    <!-- Gráfico -->
+    <div class="chart-container">
+        <canvas id="canvas1" width="400" height="250" style="border: 1px solid #e1d8e6; border-radius: 8px; background-color: #fcfbfe;"></canvas>
         <script>
             const canvas = document.getElementById("canvas1");
             const ctx = canvas.getContext("2d");
 
             ctx.beginPath();
-            ctx.font = "14px Arial";
+            ctx.font = "12px 'Open Sans'";
+            ctx.fillStyle = "#555555";
             let sum = 0;
             for (let i = 1; i <= 6; i++) {
-                ctx.fillText(i.toString(), 10, 200-sum);
+                ctx.fillText(i.toString(), 15, 200-sum);
                 sum += 35;
             }
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.font = "14px Arial";
+            ctx.strokeStyle = "#e1d8e6";
             sum = 0;
             for (let i = 0; i < 6; i++) {
-                ctx.moveTo(20, 20+sum);
+                ctx.moveTo(30, 20+sum);
                 ctx.lineTo(375, 20+sum);
                 sum += 35;
             }
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.font = "14px Arial";
+            ctx.font = "12px 'Open Sans'";
+            ctx.fillStyle = "#555555";
             const dates = ["01.12.22", "02.12.22", "03.12.22", "04.12.22", "05.12.22", "06.12.22"];
             sum = 0;
             dates.forEach(date => {
-                ctx.fillText(date, 15+sum, 238);
-                sum += 66;
+                ctx.fillText(date, 30+sum, 235);
+                sum += 60;
             });
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.font = "14px Arial";
+            ctx.strokeStyle = "#e1d8e6";
             sum = 0;
             for (let i = 0; i < 6; i++) {
-                ctx.moveTo(45+sum, 20);
-                ctx.lineTo(45+sum, 220);
-                sum += 66;
+                ctx.moveTo(55+sum, 20);
+                ctx.lineTo(55+sum, 210);
+                sum += 60;
             }
             ctx.stroke();
 
+            // Linha da série de exemplo
             ctx.beginPath();
-            ctx.font = "14px Arial";
-            ctx.moveTo(20, 210);
-            ctx.lineTo(375, 20);
-            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 3;
+            ctx.moveTo(55, 200);
+            ctx.lineTo(115, 130);
+            ctx.strokeStyle = '#5D2A68';
             ctx.stroke();
         </script>
     </div>
-    <div class="new-line">
-        <table>
-            <div class="tb-item tr-pair">
-                <b>Legenda da série histórica</b>
-            </div>
-            <tr class="tr-pair">
-                <th>Código</th><th>Procedimento</th>
+
+    <!-- Tabela Legenda -->
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2" class="table-title">Legenda de Códigos dos Procedimentos</th>
             </tr>
             <tr>
-                <td><b>1</b></td><td>Teste</td>
+                <th style="width: 20%;">Código</th>
+                <th style="width: 80%;">Procedimento Clínico</th>
             </tr>
-            <tr class="tr-pair">
-                <td><b>2</b></td><td>Reteste</td>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1</strong></td>
+                <td>Teste da Orelhinha (TAN)</td>
             </tr>
             <tr>
-                <td><b>3</b></td><td>Encaminhado para diagnóstico</td>
-            </tr>
-            <tr class="tr-pair">
-                <td><b>4</b></td><td>1° atendimento em Serviço de referência</td>
+                <td><strong>2</strong></td>
+                <td>Reteste da Orelhinha</td>
             </tr>
             <tr>
-                <td><b>5</b></td><td>Diagnóstico final</td>
+                <td><strong>3</strong></td>
+                <td>Encaminhado para Diagnóstico Otorrinolaringológico</td>
             </tr>
-            <tr class="tr-pair">
-                <td><b>6</b></td><td>Início da intervenção (AASI)</td>
+            <tr>
+                <td><strong>4</strong></td>
+                <td>Primeiro Atendimento em Serviço de Referência</td>
             </tr>
-        </table>
-    </div>
-    <br/>
-    <div class="new-line" style="text-align: justify">
-        <p>
-            Orientações do Test:
-        </p>
-        <p>
-            {{test.orientation.description}}
-            _____________________________________________________________________________
-            _____________________________________________________________________________
-        </p>
-    </div>
-    <div class="new-line" style="text-align: justify">
-        <p>
-            Orientações do Retest:
-        </p>
-        <p>
-            {{retest.orientation.description}}
-            _____________________________________________________________________________
-            _____________________________________________________________________________
-        </p>
+            <tr>
+                <td><strong>5</strong></td>
+                <td>Diagnóstico Final Concluído</td>
+            </tr>
+            <tr>
+                <td><strong>6</strong></td>
+                <td>Início de Intervenção (Aparelho de Amplificação Sonora Individual - AASI)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Orientações -->
+    <div class="section">
+        <div class="section-title">Acompanhamentos Registrados</div>
+        
+        {{#if test.orientation.description}}
+            <div class="label">Orientações do Teste:</div>
+            <div class="text-block">{{test.orientation.description}}</div>
+        {{/if}}
+
+        {{#if retest.orientation.description}}
+            <div class="label" style="margin-top: 15px;">Orientações do Reteste:</div>
+            <div class="text-block" style="border-left-color: #009688;">{{retest.orientation.description}}</div>
+        {{/if}}
     </div>
 </body>
 </html>

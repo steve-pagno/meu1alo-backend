@@ -225,4 +225,145 @@ export default class InstitutionService {
 
         return triageRepository.getAllByInstitution(institutionId, query);
     }
+
+    public async getTherapists(userId: number) {
+        const ReportsRepository = require('../reports/ReportsRepository').default;
+        const reportsRepository = new ReportsRepository();
+        const institutionId = await reportsRepository.getInstitutionsIDsOfInstitutionUser(userId);
+
+        const { Therapist } = await import('../../entity/therapist/Therapist');
+        const therapists = await Therapist.createQueryBuilder('therapist')
+            .innerJoin('therapist.institutions', 'institution')
+            .leftJoinAndSelect('therapist.emails', 'emails')
+            .leftJoinAndSelect('therapist.phones', 'phones')
+            .where('institution.id = :institutionId', { institutionId })
+            .getMany();
+
+        return therapists;
+    }
+
+    public async checkTherapistByCrfa(crfa: string) {
+        const { Therapist } = await import('../../entity/therapist/Therapist');
+        const therapist = await Therapist.findOne({
+            relations: ['emails', 'phones', 'institutions'],
+            where: { crfa: crfa.replace(/\D/g, '') }
+        });
+        return therapist || null;
+    }
+
+    public async addOrRegisterTherapist(userId: number, payload: any) {
+        const ReportsRepository = require('../reports/ReportsRepository').default;
+        const reportsRepository = new ReportsRepository();
+        const institutionId = await reportsRepository.getInstitutionsIDsOfInstitutionUser(userId);
+
+        const institution = await this.findOneById(Number(institutionId));
+        if (!institution) {
+            throw new NotFoundInstitutionError();
+        }
+
+        const { Therapist } = await import('../../entity/therapist/Therapist');
+
+        if (payload.therapistId) {
+            const therapist = await Therapist.findOne({
+                where: { id: Number(payload.therapistId) },
+                relations: ['institutions', 'emails']
+            });
+            if (!therapist) {
+                throw new Error('Fonoaudiólogo não encontrado.');
+            }
+
+            if (!therapist.institutions.some(i => i.id === institution.id)) {
+                await dataSource.createQueryBuilder()
+                    .relation(Therapist, "institutions")
+                    .of(therapist.id)
+                    .add(institution.id);
+
+                try {
+                    const mainEmail = therapist.emails?.find(e => e.isMainEmail)?.email || therapist.emails?.[0]?.email;
+                    if (mainEmail) {
+                        const { EmailService } = require('../../services/EmailService');
+                        await EmailService.sendTherapistInstitutionAssociationEmail(
+                            mainEmail,
+                            therapist.name,
+                            institution.institutionName
+                        );
+                    }
+                } catch (emailErr) {
+                    console.error("Erro ao enviar e-mail de vínculo de fonoaudiólogo (existente):", emailErr);
+                }
+            }
+            return therapist;
+        } else {
+            const TherapistService = require('../therapist/TherapistService').default;
+            const therapistService = new TherapistService();
+
+            const therapist = new Therapist();
+            therapist.name = payload.name;
+            therapist.login = payload.login;
+            therapist.password = payload.password;
+            therapist.crfa = payload.crfa.replace(/\D/g, '');
+
+            const { TherapistXP } = require('../therapist/TherapistTypes');
+            therapist.xp = TherapistXP[payload.xp as any];
+
+            await therapistService.isATherapistUser(therapist);
+
+            const CryptoHelper = require('../../helpers/CryptoHelper').default;
+            therapist.password = CryptoHelper.encrypt(therapist.password);
+
+            const emailsPayload = (payload.emails || []).map((emailStr: string, idx: number) => {
+                const { TherapistEmail } = require('../../entity/therapist/TherapistEmail');
+                const emailObj = new TherapistEmail();
+                emailObj.email = emailStr;
+                emailObj.isPrincipal = idx === 0;
+                return emailObj;
+            });
+
+            const phonesPayload = (payload.phones || []).map((phoneStr: string, idx: number) => {
+                const { TherapistPhone } = require('../../entity/therapist/TherapistPhone');
+                const phoneObj = new TherapistPhone();
+                phoneObj.phoneNumber = phoneStr;
+                phoneObj.isPrincipal = idx === 0;
+                return phoneObj;
+            });
+
+            const result = await therapistService.create(therapist, emailsPayload, phonesPayload);
+            
+            await dataSource.createQueryBuilder()
+                .relation(Therapist, "institutions")
+                .of(result.id)
+                .add(institution.id);
+
+            try {
+                const mainEmail = payload.emails?.[0];
+                if (mainEmail) {
+                    const { EmailService } = require('../../services/EmailService');
+                    await EmailService.sendTherapistInstitutionAssociationEmail(
+                        mainEmail,
+                        result.name,
+                        institution.institutionName
+                    );
+                }
+            } catch (emailErr) {
+                console.error("Erro ao enviar e-mail de vínculo de fonoaudiólogo (novo):", emailErr);
+            }
+
+            return result;
+        }
+    }
+
+    public async removeTherapist(userId: number, therapistId: number) {
+        const ReportsRepository = require('../reports/ReportsRepository').default;
+        const reportsRepository = new ReportsRepository();
+        const institutionId = await reportsRepository.getInstitutionsIDsOfInstitutionUser(userId);
+
+        const { Therapist } = await import('../../entity/therapist/Therapist');
+        
+        await dataSource.createQueryBuilder()
+            .relation(Therapist, "institutions")
+            .of(therapistId)
+            .remove(Number(institutionId));
+
+        return { success: true };
+    }
 }

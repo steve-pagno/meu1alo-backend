@@ -20,7 +20,59 @@ export default class InstitutionRoutes extends AbstractRoutes {
         this.getInstitutionTypes();
         this.getAll();
         this.getTriages();
+        this.getTherapists();
+        this.checkTherapistByCrfa();
+        this.addOrRegisterTherapist();
+        this.removeTherapist();
         this.getOne();
+    }
+
+    private getTherapists() {
+        const config: RouteConfig = {
+            description: 'Recuperar fonoaudiólogos da instituição logada',
+            method: 'get',
+            params: new ValidatorRequest(),
+            path: '/therapist',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.getTherapists);
+    }
+
+    private checkTherapistByCrfa() {
+        const config: RouteConfig = {
+            description: 'Verificar se fonoaudiólogo já existe pelo CRFa',
+            method: 'get',
+            params: new ValidatorRequest(undefined, undefined, new ValidatorObject('params', [
+                new ValidatorString('crfa').required(true)
+            ])),
+            path: '/therapist/check-crfa/:crfa',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.checkTherapistByCrfa);
+    }
+
+    private addOrRegisterTherapist() {
+        const config: RouteConfig = {
+            description: 'Cadastrar ou vincular fonoaudiólogo',
+            method: 'post',
+            params: new ValidatorRequest(new ValidatorObject('body', [])),
+            path: '/therapist',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.addOrRegisterTherapist);
+    }
+
+    private removeTherapist() {
+        const config: RouteConfig = {
+            description: 'Remover fonoaudiólogo da instituição logada',
+            method: 'delete',
+            params: new ValidatorRequest(undefined, undefined, new ValidatorObject('params', [
+                new ValidatorNumber('therapistId').required(true)
+            ])),
+            path: '/therapist/:therapistId',
+            withJWT: true
+        };
+        this.addRoute<any>(config, this.institutionController.removeTherapist);
     }
 
     private create() {

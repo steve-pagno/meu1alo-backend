@@ -12,7 +12,11 @@ export default class TherapistController {
         const therapistService = new TherapistService();
 
         therapist.xp = TherapistXP[therapist.xp as unknown as TherapistXPString];
-        therapist.institutions = therapist.institutions.map((i) => ({ id: i })) as unknown as Institution[];
+        if (therapist.institutions && Array.isArray(therapist.institutions)) {
+            therapist.institutions = therapist.institutions.map((i) => ({ id: Number(i) })) as unknown as Institution[];
+        } else {
+            therapist.institutions = [];
+        }
 
         await therapistService.isATherapistUser(therapist);
 

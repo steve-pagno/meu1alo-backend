@@ -1,103 +1,252 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title></title>
+    <title>Laudo de Triagem Auditiva Neonatal - Reteste</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        .new-line {
-            margin-top: 10px;
+        * {
+            box-sizing: border-box;
         }
-        .spacing {
-            display: flex;
-            justify-content: space-between;
+        body {
+            margin: 40px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            color: #333333;
+            background-color: #ffffff;
+            line-height: 1.6;
         }
-        .tr-pair {
-            background-color: #bfbfbf;
-        }
-        .tb-item {
-            border-bottom: none;
+        .header {
             text-align: center;
+            border-bottom: 3px solid #5D2A68;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
-
-        table {
-            border-collapse: collapse;
-            text-align: left;
+        .logo-placeholder {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #5D2A68;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            color: #666666;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #333333;
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section {
+            background-color: #fcfbfe;
+            border: 1px solid #e1d8e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: #5D2A68;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-left: 4px solid #5D2A68;
+            padding-left: 8px;
+        }
+        .grid {
+            display: table;
             width: 100%;
+            table-layout: fixed;
         }
-        td, th, .tb-item {
-            border: 1px solid black;
-            padding: 2px 10px;
-            min-width: 90px;
+        .row {
+            display: table-row;
+        }
+        .col {
+            display: table-cell;
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+        .label {
+            font-weight: 700;
+            color: #555555;
+        }
+        .value {
+            color: #111111;
+        }
+        .checkbox-container {
+            display: inline-block;
+            margin-right: 20px;
+            margin-top: 5px;
+        }
+        .checkbox-box {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #5D2A68;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 14px;
+            font-weight: bold;
+            color: #5D2A68;
+            margin-right: 6px;
+            vertical-align: middle;
+            background-color: #ffffff;
+        }
+        .checkbox-label {
+            vertical-align: middle;
+            font-weight: 600;
+            color: #333333;
+        }
+        .text-block {
+            background-color: #f7f9f9;
+            border-left: 4px solid #009688; /* Teal color for clinical conduct */
+            padding: 12px 18px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .signature-section {
+            margin-top: 60px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        .signature-line {
+            width: 250px;
+            border-top: 1px solid #888888;
+            margin: 0 auto;
+            padding-top: 8px;
+        }
+        .signature-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333333;
+        }
+        .signature-sub {
+            font-size: 11px;
+            color: #666666;
         }
     </style>
 </head>
-<body style="margin: 50px; font-family: arial, sans-serif; font-size: 16px">
-<h3 style="display: flex; justify-content: center">
-    Relatório de reteste
-</h3>
-<div style="margin-top: 40px;" class="spacing">
-    <span><b>Nome: </b>{{baby.name}}</span>
-    <span style="width: 124px;"><b>DN.: </b>{{baby.date}}</span>
-</div>
-<div class="new-line">
-    <b>Sexo: </b> (&emsp;) Feminino &emsp; (&emsp;) Masculino &emsp;&emsp;
-    <b>Idade: </b>_____ anos _____ meses
-</div>
-<div class="new-line spacing">
-    <span><b>Mãe: </b> {{mother.name}}</span>
-    <span style="width: 138px;"><b>Idade: </b> {{mother.age}}</span>
-</div>
-<div class="new-line">
-    <b>Pai: </b>__________________________________________________________ <b>Idade: </b> _________
-</div>
-<div class="new-line">
-    <b>Data do Exame: </b> {{triage.date}}</span>
-</div>
-<div class="new-line spacing">
-    <span><b>Equipamento: </b> {{equipment.name}}</span>
-    <span style="width: 289px"><b>Data da última calibração: </b> {{equipment.calibration}}</span>
-</div>
-<div class="new-line">
-            <span>
-                <b>Tipo de TAN: </b>
-                {{#if tan.transientEOE}}
-                    ( X )
-                {{else}}
-                    (&emsp;)
-                {{/if}}
-                EOE transiente &emsp;
-                {{#if tan.distortionEOE}}
-                    ( X )
-                {{else}}
-                    (&emsp;)
-                {{/if}}
-                EOE produto de distorção &emsp;
-                {{#if tan.autoPEATE}}
-                    ( X )
-                {{else}}
-                    (&emsp;)
-                {{/if}}
-                PEATE automático
-            </span>
-</div>
-<br/>
-<div class="new-line" style="text-align: justify">
-    <p>
-        {{conduct.resultDescription}}
-        _____________________________________________________________________________
-        _____________________________________________________________________________
-    </p>
-    <p>
-        {{conduct.accompanyDescription}}.
-        _____________________________________________________________________________
-        _____________________________________________________________________________
-    </p>
-    <p>
-        {{orientation.description}}
-        _____________________________________________________________________________
-        _____________________________________________________________________________
-    </p>
-</div>
+<body>
+    <div class="header">
+        <div class="logo-placeholder">Meu 1 Alô</div>
+        <div class="subtitle">Programa de Triagem Auditiva Neonatal</div>
+    </div>
+
+    <div class="title">Laudo de Exame - Reteste</div>
+
+    <!-- Dados do Paciente e Mãe -->
+    <div class="section">
+        <div class="section-title">Identificação</div>
+        <div class="grid">
+            <div class="row">
+                <div class="col" style="width: 60%;">
+                    <span class="label">Nome da Criança:</span> 
+                    <span class="value">{{baby.name}}</span>
+                </div>
+                <div class="col" style="width: 40%;">
+                    <span class="label">Data de Nasc.:</span> 
+                    <span class="value">{{baby.date}}</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <span class="label">Mãe:</span> 
+                    <span class="value">{{mother.name}}</span>
+                </div>
+                <div class="col">
+                    <span class="label">Idade da Mãe:</span> 
+                    <span class="value">{{mother.age}} anos</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col" colspan="2">
+                    <span class="label">Data do Exame:</span> 
+                    <span class="value">{{triage.date}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipamento Utilizado -->
+    <div class="section">
+        <div class="section-title">Equipamento Utilizado</div>
+        <div class="grid">
+            <div class="row">
+                <div class="col" style="width: 60%;">
+                    <span class="label">Modelo/Marca:</span> 
+                    <span class="value">{{equipment.name}}</span>
+                </div>
+                <div class="col" style="width: 40%;">
+                    <span class="label">Última Calibração:</span> 
+                    <span class="value">{{equipment.calibration}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipo de Exame -->
+    <div class="section">
+        <div class="section-title">Tipo de Triagem Auditiva Neonatal (TAN)</div>
+        <div style="padding: 5px 10px;">
+            <div class="checkbox-container">
+                <span class="checkbox-box">{{#if tan.transientEOE}}X{{else}}&nbsp;{{/if}}</span>
+                <span class="checkbox-label">EOE Transiente</span>
+            </div>
+            <div class="checkbox-container">
+                <span class="checkbox-box">{{#if tan.distortionEOE}}X{{else}}&nbsp;{{/if}}</span>
+                <span class="checkbox-label">EOE Produto de Distorção</span>
+            </div>
+            <div class="checkbox-container">
+                <span class="checkbox-box">{{#if tan.autoPEATE}}X{{else}}&nbsp;{{/if}}</span>
+                <span class="checkbox-label">PEATE Automático</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados e Condutas -->
+    <div class="section">
+        <div class="section-title">Resultados e Condutas Clínicas</div>
+        
+        {{#if conduct.resultDescription}}
+            <div class="label" style="margin-bottom: 5px;">Descrição do Resultado:</div>
+            <div class="text-block">{{conduct.resultDescription}}</div>
+        {{/if}}
+
+        {{#if conduct.accompanyDescription}}
+            <div class="label" style="margin-bottom: 5px; margin-top: 15px;">Monitoramento / Acompanhamento:</div>
+            <div class="text-block" style="border-left-color: #5D2A68;">{{conduct.accompanyDescription}}</div>
+        {{/if}}
+
+        {{#if orientation.description}}
+            <div class="label" style="margin-bottom: 5px; margin-top: 15px;">Orientações Fonoaudiológicas:</div>
+            <div class="text-block" style="border-left-color: #3F51B5;">{{orientation.description}}</div>
+        {{/if}}
+    </div>
+
+    <!-- Assinatura -->
+    <div class="signature-section">
+        <div class="signature-line">
+            <div class="signature-title">Fonoaudiólogo(a) Responsável</div>
+            <div class="signature-sub">Programa de Triagem Auditiva Neonatal</div>
+        </div>
+    </div>
 </body>
 </html>

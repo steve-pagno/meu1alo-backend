@@ -121,4 +121,32 @@ export default class InstitutionController {
         console.log("=== GET TRIAGES RESULT COUNT ===", result ? result.length : 'null');
         return { httpStatus: HttpStatus.OK, result };
     }
+
+    public async getTherapists(params: any) {
+        const institutionService = new InstitutionService();
+        const userId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        const result = await institutionService.getTherapists(userId);
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async checkTherapistByCrfa(params: any) {
+        const institutionService = new InstitutionService();
+        const result = await institutionService.checkTherapistByCrfa(params.crfa);
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async addOrRegisterTherapist(params: any) {
+        const institutionService = new InstitutionService();
+        const userId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        const result = await institutionService.addOrRegisterTherapist(userId, params);
+        return { httpStatus: HttpStatus.OK, result };
+    }
+
+    public async removeTherapist(params: any) {
+        const institutionService = new InstitutionService();
+        const userId = params.jwtObject ? params.jwtObject.id : params.id || params.user?.jwtObject?.id;
+        const therapistId = Number(params.therapistId);
+        const result = await institutionService.removeTherapist(userId, therapistId);
+        return { httpStatus: HttpStatus.OK, result };
+    }
 }

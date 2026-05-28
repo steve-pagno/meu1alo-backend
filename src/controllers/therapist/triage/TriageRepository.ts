@@ -20,6 +20,7 @@ export default class TriageRepository {
 
     public async getAll(query: QueryTriageDTO): Promise<Triage[]> {
         let triageQuery = Triage.createQueryBuilder('triage')
+            .withDeleted()
             .select([
                 'triage.id AS id',
                 'triage.leftEar AS leftEar', 'triage.rightEar AS rightEar',
@@ -38,6 +39,10 @@ export default class TriageRepository {
             .leftJoin('baby.birthMother', 'birthMother')
             .leftJoin('triage.indicators', 'indicators')
             .where('therapist.id = :therapistId', { therapistId: query.jwtObject?.id })
+            .andWhere(
+                'triage.fk_instituicao IN (SELECT fi.fk_instituicao FROM fonoaudiologo_instituicao fi WHERE fi.fk_fonoaudiologo = :therapistId)',
+                { therapistId: query.jwtObject?.id }
+            )
             .groupBy('triage.id');
 
         if(query.rightEar && String(query.rightEar) !== '4'){
@@ -89,6 +94,7 @@ export default class TriageRepository {
 
     public async getAllByInstitution(institutionId: number, query: QueryTriageDTO): Promise<Triage[]> {
         let triageQuery = Triage.createQueryBuilder('triage')
+            .withDeleted()
             .select([
                 'triage.id AS id',
                 'triage.leftEar AS leftEar', 'triage.rightEar AS rightEar',
@@ -164,7 +170,18 @@ export default class TriageRepository {
             ],
             where: {
                 id
-            }
+            },
+            withDeleted: true
         });
+    }
+
+    public async isTherapistAssociatedWithInstitution(therapistId: number, institutionId: number): Promise<boolean> {
+        const { Therapist } = await import('../../../entity/therapist/Therapist');
+        const count = await Therapist.createQueryBuilder('therapist')
+            .innerJoin('therapist.institutions', 'institution')
+            .where('therapist.id = :therapistId', { therapistId })
+            .andWhere('institution.id = :institutionId', { institutionId })
+            .getCount();
+        return count > 0;
     }
 }

@@ -195,7 +195,8 @@ export default class TriageController {
         const babyService = new BabyService();
         const triageService = new TriageService();
 
-        const existingTriage = await triageService.findById(triageId);
+        const therapistId = params.jwtObject?.userType === 'therapist' ? params.jwtObject.id : undefined;
+        const existingTriage = await triageService.findById(triageId, therapistId);
         if (!existingTriage) {
             return { httpStatus: HttpStatus.NOT_FOUND, result: { message: "Triagem não encontrada" } };
         }
@@ -336,7 +337,8 @@ export default class TriageController {
 
     public async getById(params: any) {
         const triageService = new TriageService();
-        const result = await triageService.findById(Number(params.id));
+        const therapistId = params.jwtObject?.userType === 'therapist' ? params.jwtObject.id : undefined;
+        const result = await triageService.findById(Number(params.id), therapistId);
         return { httpStatus: HttpStatus.OK, result };
     }
 
